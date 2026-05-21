@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cyber-950 text-gray-100 font-sans antialiased overflow-x-hidden;
+  }
+}
+
+/* Glassmorphism premium panels */
+.glass-card {
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-glow-primary {
+  box-shadow: 0 0 20px rgba(79, 70, 229, 0.15);
+}
+
+.glass-glow-emerald {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+}
+
+.glass-glow-rose {
+  box-shadow: 0 0 20px rgba(244, 63, 94, 0.15);
+}
+
+/* Scrolling terminal custom scrollbars */
+.terminal-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.terminal-scroll::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.2);
+}
+.terminal-scroll::-webkit-scrollbar-thumb {
+  background: #1f2937;
+  border-radius: 4px;
+}

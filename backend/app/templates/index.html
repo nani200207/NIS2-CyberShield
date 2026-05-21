@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIS2 CyberShield Compliance Platform</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for beautiful compliance trends -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        cyber: {
+                            950: '#030712', // Rich Dark Background
+                            900: '#0b0f19',
+                            800: '#111827',
+                            700: '#1f2937',
+                            primary: '#4f46e5', // Indigo
+                            secondary: '#06b6d4', // Cyan
+                            accent: '#f59e0b', // Gold Amber
+                            emerald: '#10b981',
+                            rose: '#f43f5e'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #030712;
+            color: #f3f4f6;
+            overflow-x: hidden;
+        }
+        .font-outfit {
+            font-family: 'Outfit', sans-serif;
+        }
+        /* Glassmorphism cards */
+        .glass-card {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .glass-glow-primary {
+            box-shadow: 0 0 15px rgba(79, 70, 229, 0.15);
+        }
+        .glass-glow-emerald {
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+        }
+        .glass-glow-rose {
+            box-shadow: 0 0 15px rgba(244, 63, 94, 0.15);
+        }
+        /* Scrolling custom terminal */
+        .terminal-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .terminal-scroll::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+        }
+        .terminal-scroll::-webkit-scrollbar-thumb {
+            background: #1f2937;
+            border-radius: 4px;
+        }
+        /* Smooth transitions */
+        .tab-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Top Glow Grid Background -->
+    <div class="absolute top-0 left-0 w-full h-[500px] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(79,70,229,0.18),rgba(255,255,255,0))] -z-10 pointer-events-none"></div>
+
+    <!-- Header Navigation -->
+    <header class="border-b border-gray-800 bg-cyber-900 bg-opacity-70 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-cyber-primary to-cyber-secondary flex items-center justify-center text-white font-bold text-lg shadow-lg font-outfit">
+                    🛡️
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold font-outfit tracking-tight flex items-center bg-gradient-to-r from-white via-gray-100 to-cyber-secondary bg-clip-text text-transparent">
+                        NIS2 CYBERSHIELD
+                    </h1>
+                    <p class="text-xs text-gray-400">Compliance Scanner & AI Remediation Advisor</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2 bg-gray-900 border border-gray-800 rounded-lg p-1">
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium bg-cyber-primary text-white flex items-center space-x-1">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button onclick="switchTab('scanner')" id="btn-scanner" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium text-gray-400 hover:text-white flex items-center space-x-1">
+                    <i data-lucide="scan" class="w-4 h-4"></i>
+                    <span>Asset Scanner</span>
+                </button>
+                <button onclick="switchTab('gap')" id="btn-gap" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium text-gray-400 hover:text-white flex items-center space-x-1">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i>
+                    <span>Gap Matrix</span>
+                </button>
+                <button onclick="switchTab('ai')" id="btn-ai" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium text-gray-400 hover:text-white flex items-center space-x-1">
+                    <i data-lucide="message-square" class="w-4 h-4"></i>
+                    <span>AI Advisor</span>
+                </button>
+                <button onclick="switchTab('settings')" id="btn-settings" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium text-gray-400 hover:text-white flex items-center space-x-1">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
+                    <span>Settings</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- ================== DASHBOARD TAB ================== -->
+        <section id="tab-dashboard-content" class="space-y-6">
+            <!-- Summary Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <!-- Score Circle Gauge Card -->
+                <div class="glass-card rounded-2xl p-6 flex flex-col items-center justify-between glass-glow-primary border-indigo-900 border-opacity-30 relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-cyber-primary opacity-10 rounded-full blur-xl"></div>
+                    <h3 class="text-sm font-semibold tracking-wide text-gray-400 uppercase self-start">Compliance Score</h3>
+                    <div class="relative flex items-center justify-center my-4">
+                        <svg class="w-32 h-32 transform -rotate-90">
+                            <circle cx="64" cy="64" r="54" stroke="currentColor" class="text-gray-800" stroke-width="8" fill="transparent"/>
+                            <circle cx="64" cy="64" r="54" stroke="currentColor" id="score-circle" class="text-cyber-primary" stroke-width="8" stroke-dasharray="339.29" stroke-dashoffset="100" fill="transparent" stroke-linecap="round"/>
+                        </svg>
+                        <div class="absolute flex flex-col items-center">
+                            <span class="text-2xl font-extrabold font-outfit" id="score-text">0.0%</span>
+                            <span class="text-[10px] text-gray-400 uppercase tracking-widest font-outfit">NIS2 Article 21</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-center text-gray-400">Average based on 10 legal requirements</p>
+                </div>
+                
+                <!-- Total Scanned Assets -->
+                <div class="glass-card rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-cyber-secondary opacity-10 rounded-full blur-xl"></div>
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-semibold tracking-wide text-gray-400 uppercase">Scanned Assets</h3>
+                        <div class="p-2 rounded-lg bg-cyan-950 bg-opacity-40 border border-cyan-800 text-cyber-secondary">
+                            <i data-lucide="server" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span class="text-4xl font-extrabold font-outfit" id="stat-scanned">0</span>
+                        <p class="text-xs text-gray-400 mt-1">Discovered systems in scope subnet</p>
+                    </div>
+                    <div class="mt-4 text-xs flex justify-between text-gray-400 border-t border-gray-800 pt-3">
+                        <span>NIS2 In Scope:</span>
+                        <span class="font-semibold text-cyber-secondary" id="stat-in-scope">0</span>
+                    </div>
+                </div>
+
+                <!-- Critical Gaps -->
+                <div class="glass-card rounded-2xl p-6 flex flex-col justify-between glass-glow-rose border-rose-950 border-opacity-30 relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-cyber-rose opacity-10 rounded-full blur-xl"></div>
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-semibold tracking-wide text-gray-400 uppercase">Critical Gaps</h3>
+                        <div class="p-2 rounded-lg bg-rose-950 bg-opacity-40 border border-rose-800 text-cyber-rose">
+                            <i data-lucide="alert-octagon" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span class="text-4xl font-extrabold font-outfit text-cyber-rose" id="stat-gaps">0</span>
+                        <p class="text-xs text-gray-400 mt-1">Non-Compliant legal components</p>
+                    </div>
+                    <div class="mt-4 text-xs flex justify-between text-gray-400 border-t border-gray-800 pt-3">
+                        <span>Action Required:</span>
+                        <span class="font-semibold text-cyber-rose">IMMEDIATE</span>
+                    </div>
+                </div>
+
+                <!-- One Click Swedish Auditor Report -->
+                <div class="glass-card rounded-2xl p-6 bg-gradient-to-br from-cyber-900 via-cyber-800 to-indigo-950 border-cyber-primary border-opacity-40 flex flex-col justify-between relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-cyber-accent opacity-10 rounded-full blur-xl"></div>
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-semibold tracking-wide text-cyber-accent uppercase font-outfit">Swedish Audit PDF</h3>
+                            <span class="text-xs bg-amber-950 border border-amber-800 text-cyber-accent px-2 py-0.5 rounded">NCSC-SE</span>
+                        </div>
+                        <p class="text-xs text-gray-300 mt-3">
+                            Compile compliance gap reports ready to directly hand to Swedish authorities (MSB) or enterprise cybersecurity auditors.
+                        </p>
+                    </div>
+                    <a href="/api/v1/report/pdf" download class="mt-4 w-full bg-gradient-to-r from-cyber-primary to-indigo-600 hover:from-cyber-secondary hover:to-cyber-primary text-white text-center py-2.5 rounded-xl font-medium text-sm transition-all duration-300 shadow-lg flex items-center justify-center space-x-2">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>Generate Audit Report</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Historical Trends and Heatmaps -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Compliance Trend Line Chart -->
+                <div class="glass-card rounded-2xl p-6 lg:col-span-2">
+                    <h3 class="text-lg font-bold font-outfit mb-4 text-gray-100 flex items-center space-x-2">
+                        <i data-lucide="trending-up" class="w-5 h-5 text-cyber-primary"></i>
+                        <span>NIS2 Compliance Trend History</span>
+                    </h3>
+                    <div class="h-64 relative">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Risk Heatmap / Critical Assets -->
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-lg font-bold font-outfit mb-4 text-gray-100 flex items-center space-x-2">
+                        <i data-lucide="shield-alert" class="w-5 h-5 text-cyber-rose"></i>
+                        <span>Critical Threat Vector Assets</span>
+                    </h3>
+                    <div class="space-y-4" id="dashboard-critical-assets">
+                        <!-- Filled dynamically -->
+                        <div class="text-center text-gray-500 py-10 text-sm">No critical assets scanned yet.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================== SCANNER TAB ================== -->
+        <section id="tab-scanner-content" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Scan Control Center -->
+                <div class="glass-card rounded-2xl p-6 space-y-4 self-start">
+                    <h3 class="text-lg font-bold font-outfit text-gray-100">Scan Controller</h3>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-2">Target Subnet Range</label>
+                        <input type="text" id="scan-target-input" value="192.168.1.0/24" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-primary">
+                    </div>
+                    <div class="flex items-center space-x-3 bg-gray-950 p-3 rounded-xl border border-gray-800">
+                        <input type="checkbox" id="scan-mode-checkbox" class="w-4 h-4 accent-cyber-primary rounded">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-200">Enable Active Socket Scan</label>
+                            <span class="text-[10px] text-gray-500 block">False uses high-fidelity network models</span>
+                        </div>
+                    </div>
+                    <div class="pt-2">
+                        <button onclick="triggerScan()" class="w-full bg-gradient-to-r from-cyber-primary to-cyan-600 hover:from-cyan-600 hover:to-cyber-primary text-white py-3 rounded-xl font-medium text-sm transition-all duration-300 shadow-lg flex items-center justify-center space-x-2">
+                            <i data-lucide="play" class="w-4 h-4"></i>
+                            <span>Execute Subnet Scan</span>
+                        </button>
+                    </div>
+                    <div class="pt-2 border-t border-gray-800 flex justify-between items-center text-xs text-gray-400">
+                        <span>Shodan API Querying:</span>
+                        <span id="shodan-indicator" class="text-cyber-rose font-medium">Inactive</span>
+                    </div>
+                </div>
+
+                <!-- Scanner Terminal Console Logs -->
+                <div class="glass-card rounded-2xl p-6 lg:col-span-2 flex flex-col h-[400px]">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-bold font-outfit text-gray-100 flex items-center space-x-2">
+                            <i data-lucide="terminal" class="w-5 h-5 text-cyber-secondary"></i>
+                            <span>Discovery Terminal Log</span>
+                        </h3>
+                        <button onclick="clearLogs()" class="text-xs text-gray-400 hover:text-cyber-rose flex items-center space-x-1">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            <span>Clear Console</span>
+                        </button>
+                    </div>
+                    <div id="terminal-console" class="flex-grow bg-black rounded-xl p-4 font-mono text-xs text-cyber-emerald border border-gray-800 overflow-y-auto terminal-scroll space-y-2">
+                        <!-- Scrolling log records populated dynamically -->
+                        <div class="text-gray-500">Terminal ready. Run a subnet scan above to trigger active logs.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Discovered Assets Grid -->
+            <div class="glass-card rounded-2xl p-6">
+                <h3 class="text-lg font-bold font-outfit mb-4 text-gray-100 flex items-center space-x-2">
+                    <i data-lucide="list" class="w-5 h-5 text-cyber-primary"></i>
+                    <span>Discovered Network Asset Inventory</span>
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-300">
+                        <thead class="text-xs text-gray-400 uppercase bg-gray-900 border-b border-gray-800">
+                            <tr>
+                                <th class="px-6 py-3.5">IP Address</th>
+                                <th class="px-6 py-3.5">Hostname</th>
+                                <th class="px-6 py-3.5">OS / Fingerprint</th>
+                                <th class="px-6 py-3.5">Open Ports</th>
+                                <th class="px-6 py-3.5">NIS2 Sector</th>
+                                <th class="px-6 py-3.5">Criticality</th>
+                                <th class="px-6 py-3.5">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="assets-table-body" class="divide-y divide-gray-850">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================== GAP ANALYSIS TAB ================== -->
+        <section id="tab-gap-content" class="hidden space-y-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-2xl font-bold font-outfit text-gray-100">Article 21 Compliance Gaps Matrix</h3>
+                    <p class="text-xs text-gray-400 mt-1">Review, audit, or customize security compliance maturity ratings for all 10 NIS2 legal requirements.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="gaps-container">
+                <!-- Cards will be dynamically appended here -->
+            </div>
+        </section>
+
+        <!-- ================== AI ADVISOR TAB ================== -->
+        <section id="tab-ai-content" class="hidden flex flex-col h-[600px] glass-card rounded-2xl p-6">
+            <!-- Header -->
+            <div class="border-b border-gray-800 pb-4 mb-4 flex items-center space-x-3">
+                <div class="h-10 w-10 rounded-lg bg-cyber-primary flex items-center justify-center text-white">
+                    <i data-lucide="bot" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold font-outfit text-gray-100">AI Remediation Advisor (LangChain + RAG)</h3>
+                    <p class="text-xs text-gray-400">Ask the LLM for plain language explanations, Sweden MSB regulatory mandates, and quick code solutions.</p>
+                </div>
+            </div>
+
+            <!-- Chat screen -->
+            <div id="chat-messages-box" class="flex-grow overflow-y-auto space-y-4 pr-2 terminal-scroll p-2 bg-gray-950 bg-opacity-50 border border-gray-850 rounded-xl mb-4">
+                <div class="flex space-x-3 max-w-[80%]">
+                    <div class="h-8 w-8 rounded-full bg-cyber-primary flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">🤖</div>
+                    <div class="bg-gray-800 bg-opacity-80 rounded-2xl rounded-tl-none p-3.5 text-sm text-gray-100">
+                        Hej! I am your NIS2 cybersecurity advisor. I have analyzed your assets and legal compliance matrix. 
+                        Ask me any questions about fixing non-compliant gaps, incident reporting to Swedish MSB authorities, or configuring secure perimeters.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form input -->
+            <div class="flex space-x-3">
+                <input type="text" id="chat-input" placeholder="e.g., How do I remediate my Art 21.2j MFA non-compliance for Swedish MSB?" class="flex-grow bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyber-primary" onkeydown="if(event.key === 'Enter') sendQuery()">
+                <button onclick="sendQuery()" id="chat-btn" class="bg-cyber-primary hover:bg-cyan-600 text-white px-6 rounded-xl font-medium text-sm flex items-center space-x-2 transition-all duration-300">
+                    <span>Ask AI</span>
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- ================== SETTINGS TAB ================== -->
+        <section id="tab-settings-content" class="hidden max-w-2xl mx-auto glass-card rounded-2xl p-8 space-y-6">
+            <h3 class="text-2xl font-bold font-outfit text-gray-100 border-b border-gray-800 pb-4">Platform Configuration</h3>
+            
+            <form onsubmit="saveSettings(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-2">Google Gemini API Key</label>
+                    <input type="password" id="input-gemini-key" placeholder="AI advisor reasoning key (Optional - falls back to local analyzer)" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-primary">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-2">Shodan API Key</label>
+                    <input type="password" id="input-shodan-key" placeholder="External threat scanner key (Optional)" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-primary">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-2">Slack Webhook URL</label>
+                    <input type="text" id="input-slack-webhook" placeholder="https://hooks.slack.com/services/..." class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-primary">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-2">Continuous Monitoring Interval</label>
+                        <select id="input-scan-frequency" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-primary">
+                            <option value="5">Every 5 minutes (Testing)</option>
+                            <option value="30">Every 30 minutes</option>
+                            <option value="60">Hourly</option>
+                            <option value="720">Every 12 Hours</option>
+                            <option value="1440">Daily</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center space-x-3 pt-6">
+                        <input type="checkbox" id="input-monitoring-active" class="w-4 h-4 accent-cyber-primary rounded">
+                        <label class="text-xs font-semibold text-gray-200">Active background agent</label>
+                    </div>
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" class="w-full bg-cyber-primary hover:bg-cyan-600 text-white py-3 rounded-xl font-medium text-sm transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>Save Platform Credentials</span>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800 bg-cyber-950 py-6 text-center text-xs text-gray-500 mt-8">
+        <p>© 2026 NIS2 CyberShield Compliance Platform. Strictly restricted to Authorized Important & Essential Entity Operators.</p>
+    </footer>
+
+    <!-- Frontend Core Scripts -->
+    <script>
+        const API_BASE = "/api/v1";
+        let trendChartInstance = null;
+
+        // Initialize UI Elements
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+            loadDashboardStats();
+            loadAssets();
+            loadGapAnalysis();
+            loadSettings();
+            
+            // Poll for terminal logs and dashboard metrics every 5 seconds
+            setInterval(() => {
+                loadScanLogs();
+            }, 3000);
+        });
+
+        // Tab Navigation Router
+        function switchTab(tabName) {
+            const tabs = ['dashboard', 'scanner', 'gap', 'ai', 'settings'];
+            tabs.forEach(t => {
+                const el = document.getElementById(`tab-${t}-content`);
+                const btn = document.getElementById(`btn-${t}`);
+                if (t === tabName) {
+                    el.classList.remove('hidden');
+                    btn.classList.add('bg-cyber-primary', 'text-white');
+                    btn.classList.remove('text-gray-400');
+                } else {
+                    el.classList.add('hidden');
+                    btn.classList.remove('bg-cyber-primary', 'text-white');
+                    btn.classList.add('text-gray-400');
+                }
+            });
+            // Specific load triggers
+            if (tabName === 'dashboard') {
+                loadDashboardStats();
+            } else if (tabName === 'scanner') {
+                loadAssets();
+                loadScanLogs();
+            } else if (tabName === 'gap') {
+                loadGapAnalysis();
+            }
+        }
+
+        // ================== DATA CALLS ==================
+
+        async function loadDashboardStats() {
+            try {
+                const res = await fetch(`${API_BASE}/dashboard/stats`);
+                const data = await res.json();
+                
+                // Set score gauge circular offset
+                const score = data.overall_compliance_score;
+                document.getElementById("score-text").innerText = `${score.toFixed(1)}%`;
+                
+                const circle = document.getElementById("score-circle");
+                const circumference = 339.29; // 2 * pi * 54
+                const offset = circumference - (score / 100) * circumference;
+                circle.style.strokeDashoffset = offset;
+                
+                // Colorize gauge based on score
+                if (score < 40) {
+                    circle.className.baseVal = "text-cyber-rose";
+                } else if (score < 80) {
+                    circle.className.baseVal = "text-cyber-accent";
+                } else {
+                    circle.className.baseVal = "text-cyber-emerald";
+                }
+
+                document.getElementById("stat-scanned").innerText = data.scanned_assets_count;
+                document.getElementById("stat-in-scope").innerText = data.in_scope_assets_count;
+                document.getElementById("stat-gaps").innerText = data.critical_gaps_count;
+
+                // Render Trend Line Chart
+                renderHistoryChart(data.history);
+
+                // Render Critical Assets list
+                const critBox = document.getElementById("dashboard-critical-assets");
+                critBox.innerHTML = "";
+                if (data.critical_assets.length === 0) {
+                    critBox.innerHTML = `<div class="text-center text-gray-500 py-10 text-xs">No Critical threat assets active.</div>`;
+                } else {
+                    data.critical_assets.forEach(asset => {
+                        const item = document.createElement("div");
+                        item.className = "flex items-center justify-between bg-gray-900 border border-red-950 bg-opacity-40 p-3.5 rounded-xl";
+                        item.innerHTML = `
+                            <div class="flex items-center space-x-3">
+                                <span class="h-2.5 w-2.5 rounded-full bg-cyber-rose animate-pulse"></span>
+                                <div>
+                                    <p class="text-sm font-bold font-outfit text-gray-100">${asset.ip}</p>
+                                    <p class="text-[10px] text-gray-400">${asset.hostname || 'Embedded Client'}</p>
+                                </div>
+                            </div>
+                            <span class="text-[10px] bg-red-950 border border-red-800 text-cyber-rose px-2.5 py-0.5 rounded font-medium">${asset.scope_sector || 'OT Core'}</span>
+                        `;
+                        critBox.appendChild(item);
+                    });
+                }
+            } catch (err) {
+                console.error("Dashboard error:", err);
+            }
+        }
+
+        function renderHistoryChart(history) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            if (trendChartInstance) {
+                trendChartInstance.destroy();
+            }
+            
+            const labels = history.map(h => new Date(h.recorded_at).toLocaleDateString(undefined, {month: 'short', day: 'numeric'}));
+            const scores = history.map(h => h.score);
+
+            trendChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'NIS2 Compliance Index %',
+                        data: scores,
+                        borderColor: '#4f46e5',
+                        borderWidth: 3,
+                        backgroundColor: 'rgba(79, 70, 229, 0.05)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#06b6d4',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#9ca3af' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#9ca3af' }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function loadAssets() {
+            try {
+                const res = await fetch(`${API_BASE}/assets`);
+                const assets = await res.json();
+                const body = document.getElementById("assets-table-body");
+                body.innerHTML = "";
+
+                if (assets.length === 0) {
+                    body.innerHTML = `<tr><td colspan="7" class="text-center text-gray-500 py-10">No network assets discovered. Launch scanner.</td></tr>`;
+                    return;
+                }
+
+                assets.forEach(asset => {
+                    const row = document.createElement("tr");
+                    row.className = "hover:bg-gray-900 hover:bg-opacity-40 transition-colors";
+                    
+                    const scopeBadge = asset.in_scope 
+                        ? `<span class="bg-emerald-950 border border-emerald-800 text-cyber-emerald px-2 py-0.5 rounded text-xs">${asset.scope_sector}</span>`
+                        : `<span class="bg-gray-800 border border-gray-700 text-gray-400 px-2 py-0.5 rounded text-xs">Out of Scope</span>`;
+
+                    const critColor = asset.criticality === "Critical" ? "text-cyber-rose bg-red-950 bg-opacity-40 border border-red-800" 
+                        : (asset.criticality === "High" ? "text-cyber-accent bg-amber-950 bg-opacity-40 border border-amber-800" : "text-gray-300 bg-gray-850 border border-gray-800");
+
+                    const shodanFlag = asset.shodan_data 
+                        ? `<span class="h-2 w-2 rounded-full bg-cyber-rose inline-block" title="Exposed vulnerabilities detected in Shodan scans!"></span>`
+                        : `<span class="h-2 w-2 rounded-full bg-cyber-emerald inline-block" title="Threat intel verified clear."></span>`;
+
+                    row.innerHTML = `
+                        <td class="px-6 py-4 font-semibold text-gray-100">${asset.ip}</td>
+                        <td class="px-6 py-4">
+                            <div>
+                                <p class="text-sm font-medium text-gray-200">${asset.hostname || 'Unnamed local client'}</p>
+                                <span class="text-[10px] text-gray-400">${asset.mac_address || '00:00:00:00:00:00'}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-xs font-mono text-gray-400">${asset.os || 'RTOS Module'}</td>
+                        <td class="px-6 py-4 font-mono text-cyber-secondary text-xs">${asset.ports || 'None'}</td>
+                        <td class="px-6 py-4">${scopeBadge}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-0.5 rounded text-xs ${critColor}">${asset.criticality}</span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex items-center space-x-1 justify-center">
+                                ${shodanFlag}
+                                <button onclick="alert('Asset Scan Summary: ${asset.hostname || asset.ip}\\nPorts: ${asset.ports || "None"}\\nSector scope: ${asset.scope_sector || "Out of Scope"}\\nShodan indicators: ${asset.shodan_data || "None"}')" class="text-cyber-secondary hover:underline text-xs">View Data</button>
+                            </div>
+                        </td>
+                    `;
+                    body.appendChild(row);
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function loadScanLogs() {
+            try {
+                const res = await fetch(`${API_BASE}/scan/logs`);
+                const logs = await res.json();
+                const term = document.getElementById("terminal-console");
+                
+                // Only rewrite if logs exist
+                if (logs.length > 0) {
+                    term.innerHTML = "";
+                    // Logs are returned newest first, we reverse to display chronologically
+                    logs.reverse().forEach(log => {
+                        const line = document.createElement("div");
+                        let color = "text-white";
+                        let prefix = "[INFO]";
+                        
+                        if (log.level === "SUCCESS") {
+                            color = "text-cyber-emerald font-bold";
+                            prefix = "✔ [SUCCESS]";
+                        } else if (log.level === "WARNING") {
+                            color = "text-cyber-accent font-semibold";
+                            prefix = "⚠ [WARNING]";
+                        } else if (log.level === "ERROR") {
+                            color = "text-cyber-rose font-bold";
+                            prefix = "🚨 [CRITICAL]";
+                        } else {
+                            color = "text-gray-300";
+                            prefix = "ℹ [INFO]";
+                        }
+                        
+                        line.className = `${color} leading-5 flex space-x-2`;
+                        line.innerHTML = `
+                            <span class="text-gray-500 font-mono flex-shrink-0">${new Date(log.timestamp).toLocaleTimeString()}</span>
+                            <span class="font-bold flex-shrink-0">${prefix}</span>
+                            <span>${log.message}</span>
+                        `;
+                        term.appendChild(line);
+                    });
+                    
+                    // Auto-scroll to bottom
+                    term.scrollTop = term.scrollHeight;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function triggerScan() {
+            const target = document.getElementById("scan-target-input").value;
+            const realScan = document.getElementById("scan-mode-checkbox").checked;
+            
+            try {
+                const res = await fetch(`${API_BASE}/scan?target=${encodeURIComponent(target)}&real_scan=${realScan}`, {
+                    method: "POST"
+                });
+                const data = await res.json();
+                
+                // Show notification toast or message
+                const consoleBox = document.getElementById("terminal-console");
+                consoleBox.innerHTML += `<div class="text-cyber-secondary font-bold font-mono">--- MANUAL TRIGGER: Discovery Scan Scheduled. Streaming logs... ---</div>`;
+                switchTab('scanner');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function clearLogs() {
+            await fetch(`${API_BASE}/scan/logs/clear`, { method: "POST" });
+            document.getElementById("terminal-console").innerHTML = `<div class="text-gray-500">Terminal console wiped.</div>`;
+        }
+
+        async function loadGapAnalysis() {
+            try {
+                const res = await fetch(`${API_BASE}/gap-analysis`);
+                const gaps = await res.json();
+                const container = document.getElementById("gaps-container");
+                container.innerHTML = "";
+
+                gaps.forEach(gap => {
+                    const card = document.createElement("div");
+                    const statusColor = gap.status === "Compliant" ? "text-cyber-emerald bg-emerald-950 border-emerald-800" 
+                        : (gap.status === "Partial" ? "text-cyber-accent bg-amber-950 border-amber-800" : "text-cyber-rose bg-red-950 border-red-800");
+                    
+                    card.className = "glass-card rounded-2xl p-6 space-y-4 border border-opacity-30 relative";
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+                            <div>
+                                <span class="text-xs font-mono font-bold text-cyber-secondary">${gap.article_id}</span>
+                                <h4 class="text-base font-bold font-outfit text-gray-100 mt-0.5">${gap.category}</h4>
+                            </div>
+                            <span class="px-2.5 py-0.5 rounded text-xs border font-medium ${statusColor}">${gap.status}</span>
+                        </div>
+                        
+                        <p class="text-xs text-gray-300">${gap.description}</p>
+                        
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-gray-400 font-semibold uppercase">Maturity score</span>
+                                <span class="font-extrabold text-cyber-secondary font-outfit" id="val-${gap.article_id}">${gap.score}%</span>
+                            </div>
+                            <input type="range" min="0" max="100" value="${gap.score}" class="w-full h-1.5 bg-gray-900 rounded-lg appearance-none cursor-pointer accent-cyber-primary" 
+                                oninput="document.getElementById('val-${gap.article_id}').innerText = this.value + '%'"
+                                onchange="saveGapScore('${gap.article_id}', this.value)">
+                        </div>
+
+                        <div class="bg-gray-950 bg-opacity-60 border border-gray-850 p-3.5 rounded-xl space-y-2 text-xs">
+                            <span class="text-gray-400 uppercase font-semibold block">Auditor comments</span>
+                            <textarea id="comment-${gap.article_id}" class="w-full bg-gray-900 border border-gray-800 rounded-lg p-2 text-xs focus:outline-none focus:border-cyber-primary text-gray-300" rows="2">${gap.comments || ''}</textarea>
+                            <button onclick="saveAuditorNotes('${gap.article_id}')" class="bg-gray-800 border border-gray-700 hover:bg-gray-700 text-gray-200 px-3 py-1 rounded text-[10px] font-semibold transition-all">Save Notes</button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function saveGapScore(articleId, score) {
+            try {
+                await fetch(`${API_BASE}/gap-analysis/${articleId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ score: parseInt(score) })
+                });
+                loadDashboardStats();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function saveAuditorNotes(articleId) {
+            const comments = document.getElementById(`comment-${articleId}`).value;
+            try {
+                const res = await fetch(`${API_BASE}/gap-analysis/${articleId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ comments: comments })
+                });
+                if (res.ok) {
+                    alert("Auditor notes and findings updated successfully!");
+                    loadGapAnalysis();
+                    loadDashboardStats();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // ================== AI CHAT ==================
+
+        async function sendQuery() {
+            const input = document.getElementById("chat-input");
+            const query = input.value.trim();
+            if (!query) return;
+
+            input.value = "";
+            const box = document.getElementById("chat-messages-box");
+
+            // Append User Question
+            const userMsg = document.createElement("div");
+            userMsg.className = "flex space-x-3 max-w-[80%] self-end justify-end ml-auto";
+            userMsg.innerHTML = `
+                <div class="bg-cyber-primary rounded-2xl rounded-tr-none p-3.5 text-sm text-white">
+                    ${query}
+                </div>
+                <div class="h-8 w-8 rounded-full bg-cyan-800 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">👤</div>
+            `;
+            box.appendChild(userMsg);
+            box.scrollTop = box.scrollHeight;
+
+            // Append Loading Indicator
+            const loader = document.createElement("div");
+            loader.className = "flex space-x-3 max-w-[80%]" + " loader-ai";
+            loader.innerHTML = `
+                <div class="h-8 w-8 rounded-full bg-cyber-primary flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">🤖</div>
+                <div class="bg-gray-800 bg-opacity-80 rounded-2xl rounded-tl-none p-3.5 text-sm text-gray-400 flex items-center space-x-2">
+                    <span class="animate-bounce">●</span>
+                    <span class="animate-bounce" style="animation-delay: 0.2s">●</span>
+                    <span class="animate-bounce" style="animation-delay: 0.4s">●</span>
+                    <span class="text-xs text-gray-500">RAG analysis active...</span>
+                </div>
+            `;
+            box.appendChild(loader);
+            box.scrollTop = box.scrollHeight;
+
+            try {
+                const res = await fetch(`${API_BASE}/advisor/query`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ query: query })
+                });
+                const data = await res.json();
+                
+                // Remove loader
+                box.removeChild(loader);
+
+                // Append AI Response (Simple formatted string block)
+                const aiMsg = document.createElement("div");
+                aiMsg.className = "flex space-x-3 max-w-[90%]";
+                
+                // Simple markdown formatter helper for high fidelity display
+                const formattedHtml = data.response
+                    .replace(/\n\n/g, '<br/><br/>')
+                    .replace(/\n/g, '<br/>')
+                    .replace(/### (.*)/g, '<h3 class="text-base font-bold font-outfit text-cyan-300 mt-2">$1</h3>')
+                    .replace(/#### (.*)/g, '<h4 class="text-sm font-semibold text-indigo-300 mt-2">$1</h4>')
+                    .replace(/##### (.*)/g, '<h5 class="text-xs font-semibold text-gray-300 mt-1">$1</h5>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/_(.*?)_/g, '<em>$1</em>')
+                    .replace(/```(.*?)\n(.*?)```/gs, '<pre class="bg-black rounded-lg p-3 text-xs font-mono text-cyber-secondary border border-gray-800 my-2 overflow-x-auto">$2</pre>')
+                    .replace(/> (.*)/g, '<blockquote class="border-l-4 border-cyber-accent bg-gray-900 bg-opacity-40 p-2 text-xs italic my-1 text-cyber-accent">$1</blockquote>');
+
+                aiMsg.innerHTML = `
+                    <div class="h-8 w-8 rounded-full bg-cyber-primary flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">🤖</div>
+                    <div class="bg-gray-800 bg-opacity-80 rounded-2xl rounded-tl-none p-4 text-sm text-gray-100 leading-relaxed max-w-full overflow-hidden">
+                        ${formattedHtml}
+                        ${data.sources.length > 0 ? `<div class="mt-3 pt-2 border-t border-gray-750 text-[10px] text-gray-500 font-mono">Sources referenced: ${data.sources.join(" | ")}</div>` : ''}
+                    </div>
+                `;
+                box.appendChild(aiMsg);
+                box.scrollTop = box.scrollHeight;
+            } catch (err) {
+                console.error(err);
+                box.removeChild(loader);
+            }
+        }
+
+        // ================== PLATFORM SETTINGS ==================
+
+        async function loadSettings() {
+            try {
+                const res = await fetch(`${API_BASE}/settings`);
+                const settings = await res.json();
+                
+                document.getElementById("input-gemini-key").value = settings.gemini_key || "";
+                document.getElementById("input-shodan-key").value = settings.shodan_key || "";
+                document.getElementById("input-slack-webhook").value = settings.slack_webhook || "";
+                document.getElementById("input-scan-frequency").value = settings.scan_frequency || 60;
+                document.getElementById("input-monitoring-active").checked = settings.monitoring_active;
+                
+                // Show indicators
+                const indicator = document.getElementById("shodan-indicator");
+                if (settings.shodan_key) {
+                    indicator.innerText = "ACTIVE";
+                    indicator.className = "text-cyber-emerald font-bold";
+                } else {
+                    indicator.innerText = "INACTIVE";
+                    indicator.className = "text-cyber-rose font-medium";
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function saveSettings(e) {
+            e.preventDefault();
+            
+            const gemini = document.getElementById("input-gemini-key").value;
+            const shodan = document.getElementById("input-shodan-key").value;
+            const slack = document.getElementById("input-slack-webhook").value;
+            const freq = document.getElementById("input-scan-frequency").value;
+            const monitoring = document.getElementById("input-monitoring-active").checked;
+            
+            try {
+                const res = await fetch(`${API_BASE}/settings`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        gemini_key: gemini,
+                        shodan_key: shodan,
+                        slack_webhook: slack,
+                        scan_frequency: parseInt(freq),
+                        monitoring_active: monitoring
+                    })
+                });
+                
+                if (res.ok) {
+                    alert("System configuration credentials updated and continuous background scanning agent rescheduled successfully!");
+                    loadSettings();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>

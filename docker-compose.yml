@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # Primary Database
+  db:
+    image: postgres:15-alpine
+    container_name: nis2-db
+    environment:
+      POSTGRES_DB: nis2_compliance
+      POSTGRES_USER: nis2_admin
+      POSTGRES_PASSWORD: SecretPassword123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nis2_admin -d nis2_compliance"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nis2-network
+
+  # Redis message broker
+  redis:
+    image: redis:7-alpine
+    container_name: nis2-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - nis2-network
+
+  # Backend FastAPI App
+  backend:
+    build:
+      context: ./
+      dockerfile: ./backend/Dockerfile
+    container_name: nis2-backend
+    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://nis2_admin:SecretPassword123@db:5432/nis2_compliance
+      - REDIS_URL=redis://redis:6379/0
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - SHODAN_API_KEY=${SHODAN_API_KEY}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - nis2-network
+
+  # Continuous Monitoring Celery Worker
+  celery_worker:
+    build:
+      context: ./
+      dockerfile: ./backend/Dockerfile
+    container_name: nis2-celery-worker
+    command: celery -A backend.app.worker worker --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=postgresql://nis2_admin:SecretPassword123@db:5432/nis2_compliance
+      - REDIS_URL=redis://redis:6379/0
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - SHODAN_API_KEY=${SHODAN_API_KEY}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+    depends_on:
+      - db
+      - redis
+    networks:
+      - nis2-network
+
+  # Production Frontend Panel (served via dev hot reload or static nginx server)
+  frontend:
+    image: node:20-alpine
+    container_name: nis2-frontend
+    working_dir: /app/frontend
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    volumes:
+      - ./frontend:/app/frontend
+      - .:/app
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - nis2-network
+
+volumes:
+  pgdata:
+
+networks:
+  nis2-network:
+    driver: bridge
