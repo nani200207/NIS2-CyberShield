@@ -4,20 +4,6 @@ An enterprise-grade, dockerized cybersecurity platform designed to automate netw
 
 ---
 
-## 🌟 Visual Preview
-
-### 1. Compliance Operations Dashboard & AI Chat
-The dashboard leverages glowing glassmorphism HSL metrics, responsive circular SVG scores progress trackers, and real-time custom Recharts Area trends logging to monitor overall cyber posture at a glance.
-
-![Operations Dashboard](images/nis2_operations_dashboard.png) *Visual Dashboard Panel Mockup*
-
-### 2. Discovered Perimeters & Scrolling Console Terminal
-The active scanner sweeping process features a retro cyber console streaming continuous log traces and mapping identified IP addresses to standard Swedish sectors.
-
-![Console Scanner Terminal](images/nis2_scrolling_terminal.png) *Visual Scanner Console Mockup*
-
----
-
 ## 🏗️ 6 Core Modules Architecture
 
 | Module | Core Functionality | Technologies |
