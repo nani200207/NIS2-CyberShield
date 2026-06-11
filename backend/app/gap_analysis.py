@@ -1,8 +1,9 @@
 import datetime
 import random
+import requests
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from backend.app.models import Asset, GapAnalysis, ComplianceHistory
+from backend.app.models import Asset, GapAnalysis, ComplianceHistory, SystemSettings, Organization
 
 NIS2_CONTROLS = [
     {
@@ -107,12 +108,37 @@ NIS2_CONTROLS = [
     }
 ]
 
-def evaluate_all_rules(db: Session):
+def trigger_slack_alert(db: Session, organization_id: int, old_score: float, new_score: float):
     """
-    Evaluates discovered assets and dynamically adjusts NIS2 gap scores.
+    Fires an automatic Slack webhook notification upon compliance score dropping by >10 points.
     """
-    # 1. Fetch assets
-    assets = db.query(Asset).all()
+    # 1. Fetch settings
+    settings = db.query(SystemSettings).filter(SystemSettings.organization_id == organization_id).first()
+    if not settings:
+        settings = db.query(SystemSettings).filter(SystemSettings.id == 1).first()
+        
+    org = db.query(Organization).filter(Organization.id == organization_id).first()
+    org_name = org.name if org else f"Organization #{organization_id}"
+    
+    if settings and settings.slack_webhook and settings.slack_webhook.startswith("http"):
+        payload = {
+            "text": f"⚠️ *NIS2 CYBERSHIELD ALERT: Critical Compliance Score Drop detected!* ⚠️\n\n"
+                    f"*Tenant/Organization:* `{org_name}`\n"
+                    f"*Compliance Change:* From `{old_score}%` to `{new_score}%` (*-{round(old_score - new_score, 1)}%*)\n"
+                    f"*Mitigation Notice:* Network scans identified severe structural changes, unpatched vulnerabilities, or administrative compliance downgrades. Immediate CISO review is required."
+        }
+        try:
+            res = requests.post(settings.slack_webhook, json=payload, timeout=5)
+            print(f"[Slack Alert] Successfully fired to channel. Response: {res.status_code}")
+        except Exception as e:
+            print(f"[Slack Alert] Failed to post webhooks: {str(e)}")
+
+def evaluate_all_rules(db: Session, organization_id: int = 1):
+    """
+    Evaluates discovered assets and dynamically adjusts NIS2 gap scores scoped per Organization SaaS.
+    """
+    # 1. Fetch assets for this organization
+    assets = db.query(Asset).filter(models_or_fallback_filter(Asset, organization_id)).all()
     in_scope_assets = [a for a in assets if a.in_scope]
     
     # 2. Check for severe vulnerabilities/discoveries
@@ -155,16 +181,20 @@ def evaluate_all_rules(db: Session):
         else:
             status = "Non-Compliant"
             
-        # Save to database
-        existing = db.query(GapAnalysis).filter(GapAnalysis.article_id == ctrl["article_id"]).first()
+        # Save to database (scoped per Organization)
+        existing = db.query(GapAnalysis).filter(
+            GapAnalysis.article_id == ctrl["article_id"],
+            models_or_fallback_filter(GapAnalysis, organization_id)
+        ).first()
+        
         if existing:
-            # Let the auditor's customized score hold unless we force re-scan
             existing.score = score
             existing.status = status
             existing.comments = comments
             existing.updated_at = datetime.datetime.utcnow()
         else:
             new_gap = GapAnalysis(
+                organization_id=organization_id,
                 article_id=ctrl["article_id"],
                 category=ctrl["category"],
                 control_name=ctrl["control_name"],
@@ -180,8 +210,9 @@ def evaluate_all_rules(db: Session):
     db.commit()
     
     # 4. Calculate total average and store historical stats
-    all_gaps = db.query(GapAnalysis).all()
+    all_gaps = db.query(GapAnalysis).filter(models_or_fallback_filter(GapAnalysis, organization_id)).all()
     avg_score = sum(g.score for g in all_gaps) / len(all_gaps) if all_gaps else 0.0
+    avg_score = round(avg_score, 1)
     
     scanned_assets_count = len(assets)
     critical_gaps = len([g for g in all_gaps if g.status == "Non-Compliant"])
@@ -189,17 +220,28 @@ def evaluate_all_rules(db: Session):
     # Check if a history log already exists for today to avoid crowding charts
     today = datetime.date.today()
     existing_history = db.query(ComplianceHistory).filter(
-        func.date(ComplianceHistory.recorded_at) == today
+        func.date(ComplianceHistory.recorded_at) == today,
+        models_or_fallback_filter(ComplianceHistory, organization_id)
     ).first()
     
+    # Fetch previous compliance point to check for drops
+    previous_history = db.query(ComplianceHistory).filter(
+        models_or_fallback_filter(ComplianceHistory, organization_id)
+    ).order_by(ComplianceHistory.recorded_at.desc()).first()
+    
+    if previous_history and (previous_history.score - avg_score) > 10.0:
+        # Trigger dynamic Slack notification automatically
+        trigger_slack_alert(db, organization_id, previous_history.score, avg_score)
+    
     if existing_history:
-        existing_history.score = round(avg_score, 1)
+        existing_history.score = avg_score
         existing_history.scanned_assets = scanned_assets_count
         existing_history.critical_gaps = critical_gaps
         existing_history.recorded_at = datetime.datetime.utcnow()
     else:
         history = ComplianceHistory(
-            score=round(avg_score, 1),
+            organization_id=organization_id,
+            score=avg_score,
             scanned_assets=scanned_assets_count,
             critical_gaps=critical_gaps,
             recorded_at=datetime.datetime.utcnow()
@@ -210,15 +252,18 @@ def evaluate_all_rules(db: Session):
     
     # Generate some fake historical compliance points if history is empty
     # to show a beautiful trend graph on first load!
-    all_history = db.query(ComplianceHistory).order_by(ComplianceHistory.recorded_at.asc()).all()
+    all_history = db.query(ComplianceHistory).filter(
+        models_or_fallback_filter(ComplianceHistory, organization_id)
+    ).order_by(ComplianceHistory.recorded_at.asc()).all()
+    
     if len(all_history) <= 1:
-        # Populate history for the last 6 days to look stunning
         now = datetime.datetime.utcnow()
         scores_trend = [31.5, 33.2, 34.0, 37.8, 38.5, avg_score]
         for i, hist_score in enumerate(scores_trend[:-1]):
             day_offset = len(scores_trend) - 1 - i
             recorded_date = now - datetime.timedelta(days=day_offset)
             fake_history = ComplianceHistory(
+                organization_id=organization_id,
                 score=hist_score,
                 scanned_assets=scanned_assets_count,
                 critical_gaps=critical_gaps + random.randint(0, 2),
@@ -226,3 +271,9 @@ def evaluate_all_rules(db: Session):
             )
             db.add(fake_history)
         db.commit()
+
+def models_or_fallback_filter(model_class, organization_id: int):
+    """
+    Returns a SQLAlchemy filter condition for Organization or defaults.
+    """
+    return (model_class.organization_id == organization_id) | (model_class.organization_id == None)

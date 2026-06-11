@@ -2,6 +2,20 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
+# Organization schemas
+class OrganizationBase(BaseModel):
+    name: str
+
+class OrganizationCreate(OrganizationBase):
+    pass
+
+class OrganizationResponse(OrganizationBase):
+    id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
 # Asset schemas
 class AssetBase(BaseModel):
     ip: str
@@ -20,6 +34,8 @@ class AssetCreate(AssetBase):
 
 class AssetResponse(AssetBase):
     id: int
+    organization_id: Optional[int] = None
+    dynamic_risk_score: float = 0.0
     detected_at: datetime
 
     class Config:
@@ -35,6 +51,7 @@ class GapAnalysisBase(BaseModel):
     status: str
     remediation_steps: Optional[str] = None
     comments: Optional[str] = None
+    evidence_file_path: Optional[str] = None
 
 class GapAnalysisUpdate(BaseModel):
     score: Optional[int] = None
@@ -44,6 +61,7 @@ class GapAnalysisUpdate(BaseModel):
 
 class GapAnalysisResponse(GapAnalysisBase):
     id: int
+    organization_id: Optional[int] = None
     updated_at: datetime
 
     class Config:
@@ -52,6 +70,7 @@ class GapAnalysisResponse(GapAnalysisBase):
 # Compliance History schemas
 class ComplianceHistoryResponse(BaseModel):
     id: int
+    organization_id: Optional[int] = None
     score: float
     scanned_assets: int
     critical_gaps: int
@@ -63,6 +82,7 @@ class ComplianceHistoryResponse(BaseModel):
 # Scan Log schemas
 class ScanLogResponse(BaseModel):
     id: int
+    organization_id: Optional[int] = None
     timestamp: datetime
     level: str
     message: str
@@ -76,6 +96,12 @@ class SystemSettingsBase(BaseModel):
     scan_frequency: int
     shodan_key: str
     gemini_key: str
+    
+    # Multi-LLM provider & key supports
+    llm_provider: str = "Google Gemini"
+    openai_key: str = ""
+    claude_key: str = ""
+    
     slack_webhook: str
     monitoring_active: bool
 
@@ -84,11 +110,45 @@ class SystemSettingsUpdate(BaseModel):
     scan_frequency: Optional[int] = None
     shodan_key: Optional[str] = None
     gemini_key: Optional[str] = None
+    
+    # Multi-LLM updates
+    llm_provider: Optional[str] = None
+    openai_key: Optional[str] = None
+    claude_key: Optional[str] = None
+    
     slack_webhook: Optional[str] = None
     monitoring_active: Optional[bool] = None
 
 class SystemSettingsResponse(SystemSettingsBase):
     id: int
+    organization_id: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+# Remediation Task schemas
+class RemediationTaskBase(BaseModel):
+    gap_id: str
+    title: str
+    description: Optional[str] = None
+    assignee: Optional[str] = None
+    due_date: Optional[datetime] = None
+    status: str = "Open"
+
+class RemediationTaskCreate(RemediationTaskBase):
+    pass
+
+class RemediationTaskUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    assignee: Optional[str] = None
+    due_date: Optional[datetime] = None
+    status: Optional[str] = None
+
+class RemediationTaskResponse(RemediationTaskBase):
+    id: int
+    organization_id: Optional[int] = None
+    created_at: datetime
 
     class Config:
         from_attributes = True

@@ -80,7 +80,7 @@
         }
         /* Smooth transitions */
         .tab-btn {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
     </style>
 </head>
@@ -103,31 +103,62 @@
                     <p class="text-xs text-gray-400">Compliance Scanner & AI Remediation Advisor</p>
                 </div>
             </div>
+
+            <!-- SaaS Scope dropdown selector -->
+            <div class="flex items-center space-x-1 bg-black bg-opacity-40 border border-gray-800 rounded-xl px-3 py-1.5 text-xs">
+                <i data-lucide="building" class="w-3.5 h-3.5 text-cyber-primary"></i>
+                <select id="org-selector" onchange="changeOrganization(this.value)" class="bg-transparent text-gray-200 border-none focus:outline-none cursor-pointer pr-1">
+                    <!-- Seeded Dynamically -->
+                </select>
+                <button onclick="openNewOrgModal()" class="text-gray-400 hover:text-white ml-2 transition-colors" title="Create SaaS Tenant">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
             
-            <div class="flex items-center space-x-2 bg-gray-900 border border-gray-800 rounded-lg p-1">
-                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium bg-cyber-primary text-white flex items-center space-x-1">
+            <div class="flex items-center space-x-1 bg-gray-900 border border-gray-850 rounded-lg p-1">
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium bg-cyber-primary text-white flex items-center space-x-1.5">
                     <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
                     <span>Dashboard</span>
                 </button>
-                <button onclick="switchTab('scanner')" id="btn-scanner" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium text-gray-400 hover:text-white flex items-center space-x-1">
+                <button onclick="switchTab('scanner')" id="btn-scanner" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium text-gray-400 hover:text-white flex items-center space-x-1.5">
                     <i data-lucide="scan" class="w-4 h-4"></i>
-                    <span>Asset Scanner</span>
+                    <span>Scanner</span>
                 </button>
-                <button onclick="switchTab('gap')" id="btn-gap" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium text-gray-400 hover:text-white flex items-center space-x-1">
+                <button onclick="switchTab('gap')" id="btn-gap" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium text-gray-400 hover:text-white flex items-center space-x-1.5">
                     <i data-lucide="shield-check" class="w-4 h-4"></i>
                     <span>Gap Matrix</span>
                 </button>
-                <button onclick="switchTab('ai')" id="btn-ai" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium text-gray-400 hover:text-white flex items-center space-x-1">
+                <button onclick="switchTab('remediation')" id="btn-remediation" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium text-gray-400 hover:text-white flex items-center space-x-1.5">
+                    <i data-lucide="clipboard-list" class="w-4 h-4"></i>
+                    <span>Remediation</span>
+                </button>
+                <button onclick="switchTab('ai')" id="btn-ai" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium text-gray-400 hover:text-white flex items-center space-x-1.5">
                     <i data-lucide="message-square" class="w-4 h-4"></i>
                     <span>AI Advisor</span>
                 </button>
-                <button onclick="switchTab('settings')" id="btn-settings" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium text-gray-400 hover:text-white flex items-center space-x-1">
+                <button onclick="switchTab('settings')" id="btn-settings" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium text-gray-400 hover:text-white flex items-center space-x-1.5">
                     <i data-lucide="settings" class="w-4 h-4"></i>
                     <span>Settings</span>
                 </button>
             </div>
         </div>
     </header>
+
+    <!-- Create Organization Modal dialog -->
+    <div id="new-org-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-[999] hidden backdrop-blur-sm">
+        <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl max-w-sm w-full shadow-2xl relative">
+            <h3 class="text-lg font-bold font-outfit text-white mb-2 flex items-center space-x-2">
+                <i data-lucide="building" class="w-5 h-5 text-cyber-primary"></i>
+                <span>Add SaaS Organization</span>
+            </h3>
+            <p class="text-xs text-gray-400 mb-4">Onboard a dedicated cyber asset scope mapping environment.</p>
+            <input type="text" id="new-org-name-input" placeholder="e.g. Västerås Utilities" class="w-full bg-gray-950 border border-gray-850 rounded-xl px-3.5 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-cyber-primary font-outfit mb-4">
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeNewOrgModal()" class="px-4 py-2 border border-gray-800 rounded-xl hover:bg-gray-850 text-sm text-gray-400 font-medium">Cancel</button>
+                <button onclick="createOrganization()" class="px-4 py-2 bg-cyber-primary hover:bg-opacity-90 text-white rounded-xl text-sm font-semibold shadow-md">Onboard Tenant</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Main Container -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -150,7 +181,7 @@
                             <span class="text-[10px] text-gray-400 uppercase tracking-widest font-outfit">NIS2 Article 21</span>
                         </div>
                     </div>
-                    <p class="text-xs text-center text-gray-400">Average based on 10 legal requirements</p>
+                    <p class="text-xs text-center text-gray-400">Average based on legal requirements</p>
                 </div>
                 
                 <!-- Total Scanned Assets -->
@@ -200,13 +231,13 @@
                             <span class="text-xs bg-amber-950 border border-amber-800 text-cyber-accent px-2 py-0.5 rounded">NCSC-SE</span>
                         </div>
                         <p class="text-xs text-gray-300 mt-3">
-                            Compile compliance gap reports ready to directly hand to Swedish authorities (MSB) or enterprise cybersecurity auditors.
+                            Compile compliance gap reports and compliance certification ready to directly hand to Swedish authorities (MSB).
                         </p>
                     </div>
-                    <a href="/api/v1/report/pdf" download class="mt-4 w-full bg-gradient-to-r from-cyber-primary to-indigo-600 hover:from-cyber-secondary hover:to-cyber-primary text-white text-center py-2.5 rounded-xl font-medium text-sm transition-all duration-300 shadow-lg flex items-center justify-center space-x-2">
+                    <button onclick="downloadReport()" class="mt-4 w-full bg-gradient-to-r from-cyber-primary to-indigo-600 hover:from-cyber-secondary hover:to-cyber-primary text-white text-center py-2.5 rounded-xl font-medium text-sm transition-all duration-300 shadow-lg flex items-center justify-center space-x-2">
                         <i data-lucide="download" class="w-4 h-4"></i>
                         <span>Generate Audit Report</span>
-                    </a>
+                    </button>
                 </div>
             </div>
 
@@ -241,11 +272,15 @@
         <section id="tab-scanner-content" class="hidden space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Scan Control Center -->
-                <div class="glass-card rounded-2xl p-6 space-y-4 self-start">
-                    <h3 class="text-lg font-bold font-outfit text-gray-100">Scan Controller</h3>
+                <div class="glass-card rounded-2xl p-6 space-y-4 self-start relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyber-secondary to-indigo-600"></div>
+                    <h3 class="text-lg font-bold font-outfit text-gray-100 flex items-center space-x-2">
+                        <i data-lucide="scan" class="w-5 h-5 text-cyber-secondary"></i>
+                        <span>Subnet Scan Parameters</span>
+                    </h3>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-2">Target Subnet Range</label>
-                        <input type="text" id="scan-target-input" value="192.168.1.0/24" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-primary">
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-2">Target Subnet CIDR</label>
+                        <input type="text" id="scan-target-input" value="10.100.4.0/24" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-primary font-mono">
                     </div>
                     <div class="flex items-center space-x-3 bg-gray-950 p-3 rounded-xl border border-gray-800">
                         <input type="checkbox" id="scan-mode-checkbox" class="w-4 h-4 accent-cyber-primary rounded">
@@ -255,32 +290,35 @@
                         </div>
                     </div>
                     <div class="pt-2">
-                        <button onclick="triggerScan()" class="w-full bg-gradient-to-r from-cyber-primary to-cyan-600 hover:from-cyan-600 hover:to-cyber-primary text-white py-3 rounded-xl font-medium text-sm transition-all duration-300 shadow-lg flex items-center justify-center space-x-2">
-                            <i data-lucide="play" class="w-4 h-4"></i>
+                        <button onclick="triggerScan()" id="scan-btn" class="w-full bg-gradient-to-r from-cyber-secondary to-indigo-600 hover:opacity-90 text-white py-3 rounded-xl font-medium text-sm transition-all duration-300 shadow-lg flex items-center justify-center space-x-2">
+                            <i data-lucide="radio" class="w-4 h-4 text-white animate-pulse"></i>
                             <span>Execute Subnet Scan</span>
                         </button>
                     </div>
                     <div class="pt-2 border-t border-gray-800 flex justify-between items-center text-xs text-gray-400">
-                        <span>Shodan API Querying:</span>
+                        <span>Shodan Threat Intel:</span>
                         <span id="shodan-indicator" class="text-cyber-rose font-medium">Inactive</span>
                     </div>
                 </div>
 
-                <!-- Scanner Terminal Console Logs -->
+                <!-- Scanner Terminal Console Logs (WebSockets!) -->
                 <div class="glass-card rounded-2xl p-6 lg:col-span-2 flex flex-col h-[400px]">
-                    <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center justify-between mb-3 border-b border-gray-800 pb-2">
                         <h3 class="text-lg font-bold font-outfit text-gray-100 flex items-center space-x-2">
-                            <i data-lucide="terminal" class="w-5 h-5 text-cyber-secondary"></i>
-                            <span>Discovery Terminal Log</span>
+                            <i data-lucide="terminal" class="w-5 h-5 text-cyber-emerald"></i>
+                            <span>Live Scanner Daemon Console (WebSockets Channel)</span>
                         </h3>
                         <button onclick="clearLogs()" class="text-xs text-gray-400 hover:text-cyber-rose flex items-center space-x-1">
                             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                             <span>Clear Console</span>
                         </button>
                     </div>
-                    <div id="terminal-console" class="flex-grow bg-black rounded-xl p-4 font-mono text-xs text-cyber-emerald border border-gray-800 overflow-y-auto terminal-scroll space-y-2">
-                        <!-- Scrolling log records populated dynamically -->
-                        <div class="text-gray-500">Terminal ready. Run a subnet scan above to trigger active logs.</div>
+                    <div id="terminal-console" class="flex-grow bg-black rounded-xl p-4 font-mono text-xs text-green-400 border border-gray-900 overflow-y-auto terminal-scroll space-y-2 relative">
+                        <div class="absolute top-2 right-4 flex items-center space-x-1.5">
+                            <span class="w-2 h-2 rounded-full bg-cyber-emerald animate-ping"></span>
+                            <span class="text-[9px] text-gray-500 uppercase tracking-widest font-outfit">Live Channel</span>
+                        </div>
+                        <div class="text-gray-500">Terminal listening... Trigger a subnet sweep above to trace active socket discovery.</div>
                     </div>
                 </div>
             </div>
@@ -288,23 +326,23 @@
             <!-- Discovered Assets Grid -->
             <div class="glass-card rounded-2xl p-6">
                 <h3 class="text-lg font-bold font-outfit mb-4 text-gray-100 flex items-center space-x-2">
-                    <i data-lucide="list" class="w-5 h-5 text-cyber-primary"></i>
+                    <i data-lucide="server" class="w-5 h-5 text-cyber-rose"></i>
                     <span>Discovered Network Asset Inventory</span>
                 </h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm text-gray-300">
-                        <thead class="text-xs text-gray-400 uppercase bg-gray-900 border-b border-gray-800">
+                        <thead class="text-xs text-gray-400 uppercase bg-gray-900 border-b border-gray-800 font-semibold tracking-wide">
                             <tr>
-                                <th class="px-6 py-3.5">IP Address</th>
-                                <th class="px-6 py-3.5">Hostname</th>
-                                <th class="px-6 py-3.5">OS / Fingerprint</th>
-                                <th class="px-6 py-3.5">Open Ports</th>
-                                <th class="px-6 py-3.5">NIS2 Sector</th>
-                                <th class="px-6 py-3.5">Criticality</th>
-                                <th class="px-6 py-3.5">Details</th>
+                                <th class="px-6 py-3.5">IP Node Address</th>
+                                <th class="px-6 py-3.5">Hostname / OS</th>
+                                <th class="px-6 py-3.5">NIS2 Sector Weight</th>
+                                <th class="px-6 py-3.5">Threat Index Rating</th>
+                                <th class="px-6 py-3.5">Active Ports</th>
+                                <th class="px-6 py-3.5">NIS2 Scope Status</th>
+                                <th class="px-6 py-3.5 text-right">Discovered CVE Exposures</th>
                             </tr>
                         </thead>
-                        <tbody id="assets-table-body" class="divide-y divide-gray-850">
+                        <tbody id="assets-table-body" class="divide-y divide-gray-850 divide-opacity-40">
                             <!-- Populated dynamically -->
                         </tbody>
                     </table>
@@ -314,15 +352,103 @@
 
         <!-- ================== GAP ANALYSIS TAB ================== -->
         <section id="tab-gap-content" class="hidden space-y-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-2xl font-bold font-outfit text-gray-100">Article 21 Compliance Gaps Matrix</h3>
-                    <p class="text-xs text-gray-400 mt-1">Review, audit, or customize security compliance maturity ratings for all 10 NIS2 legal requirements.</p>
-                </div>
+            <div>
+                <h3 class="text-2xl font-bold font-outfit text-gray-100">Article 21 Compliance Gaps Matrix</h3>
+                <p class="text-xs text-gray-400 mt-1">Adjust maturity levels, upload policy attachments, and save findings scoped per organization.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="gaps-container">
                 <!-- Cards will be dynamically appended here -->
+            </div>
+        </section>
+
+        <!-- ================== REMEDIATION KANBAN TAB ================== -->
+        <section id="tab-remediation-content" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-900 bg-opacity-40 border border-gray-800 rounded-2xl p-6 backdrop-blur-md">
+                <div>
+                    <h2 class="text-2xl font-bold font-outfit text-white tracking-tight flex items-center space-x-2">
+                        <i data-lucide="check-square" class="w-6 h-6 text-cyber-primary"></i>
+                        <span>NIS2 Remediation Tracker</span>
+                    </h2>
+                    <p class="text-gray-400 text-sm mt-1">Assign, track, and manage operational milestones for critical compliance gaps.</p>
+                </div>
+                <button onclick="toggleNewTaskForm()" class="mt-4 sm:mt-0 px-4 py-2 bg-gradient-to-r from-cyber-primary to-cyber-secondary hover:opacity-90 text-white rounded-xl text-sm font-medium shadow-lg transition-all flex items-center space-x-2">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>New Remediation Task</span>
+                </button>
+            </div>
+
+            <!-- New Task Modal Overlay form -->
+            <div id="new-task-form" class="bg-gray-900 border border-cyber-primary border-opacity-30 rounded-2xl p-6 shadow-2xl relative overflow-hidden hidden animate-fadeIn">
+                <div class="absolute top-0 left-0 w-2 h-full bg-cyber-primary"></div>
+                <h3 class="text-lg font-bold font-outfit text-white mb-4">Create Remediation Task</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-xs text-gray-400 font-medium">Link to NIS2 Gap Requirement</label>
+                        <select id="task-gap-id" class="w-full bg-gray-950 border border-gray-850 rounded-xl px-3 py-2.5 text-sm text-gray-200 focus:outline-none">
+                            <!-- Filled dynamically -->
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs text-gray-400 font-medium">Task Action Title</label>
+                        <input type="text" id="task-title" placeholder="e.g. Implement Yubikeys for SecOps Admins" class="w-full bg-gray-950 border border-gray-850 rounded-xl px-3 py-2.5 text-sm text-gray-200 focus:outline-none">
+                    </div>
+                    <div class="space-y-1 md:col-span-2">
+                        <label class="text-xs text-gray-400 font-medium">Detailed Instructions / Description</label>
+                        <textarea id="task-desc" placeholder="Operational instructions or requirements to close this NIS2 security gap..." class="w-full bg-gray-950 border border-gray-850 rounded-xl px-3 py-2 text-sm text-gray-200 h-20 resize-none focus:outline-none"></textarea>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs text-gray-400 font-medium">Assignee Name</label>
+                        <input type="text" id="task-assignee" placeholder="e.g. Johan Andersson" class="w-full bg-gray-950 border border-gray-855 rounded-xl px-3 py-2.5 text-sm text-gray-200 focus:outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs text-gray-400 font-medium">Due Date</label>
+                        <input type="date" id="task-due" class="w-full bg-gray-950 border border-gray-855 rounded-xl px-3 py-2.5 text-sm text-gray-200 focus:outline-none">
+                    </div>
+                    <div class="md:col-span-2 flex justify-end space-x-3 pt-2">
+                        <button onclick="toggleNewTaskForm()" class="px-4 py-2 border border-gray-800 rounded-xl hover:bg-gray-800 text-sm text-gray-400">Cancel</button>
+                        <button onclick="submitNewTask()" class="px-5 py-2 bg-cyber-primary hover:bg-opacity-90 text-white font-medium rounded-xl text-sm shadow-md">Save Task</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kanban Grid Columns -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Open Backlog -->
+                <div class="bg-gray-900 bg-opacity-40 border border-gray-850 rounded-2xl p-4 flex flex-col min-h-[500px]">
+                    <div class="border-b-2 border-cyber-rose pb-3 mb-4 flex justify-between items-center">
+                        <h3 class="font-bold font-outfit text-white flex items-center space-x-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-cyber-rose"></span>
+                            <span>Open Backlog</span>
+                        </h3>
+                        <span id="count-open" class="bg-gray-950 border border-gray-850 text-gray-400 text-xs px-2 py-0.5 rounded-md font-semibold">0</span>
+                    </div>
+                    <div id="col-open" class="space-y-4 flex-grow overflow-y-auto"></div>
+                </div>
+
+                <!-- In Progress -->
+                <div class="bg-gray-900 bg-opacity-40 border border-gray-850 rounded-2xl p-4 flex flex-col min-h-[500px]">
+                    <div class="border-b-2 border-cyber-primary pb-3 mb-4 flex justify-between items-center">
+                        <h3 class="font-bold font-outfit text-white flex items-center space-x-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-cyber-primary"></span>
+                            <span>In Progress</span>
+                        </h3>
+                        <span id="count-progress" class="bg-gray-950 border border-gray-850 text-gray-400 text-xs px-2 py-0.5 rounded-md font-semibold">0</span>
+                    </div>
+                    <div id="col-progress" class="space-y-4 flex-grow overflow-y-auto"></div>
+                </div>
+
+                <!-- Resolved Done -->
+                <div class="bg-gray-900 bg-opacity-40 border border-gray-850 rounded-2xl p-4 flex flex-col min-h-[500px]">
+                    <div class="border-b-2 border-cyber-emerald pb-3 mb-4 flex justify-between items-center">
+                        <h3 class="font-bold font-outfit text-white flex items-center space-x-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-cyber-emerald"></span>
+                            <span>Resolved / Done</span>
+                        </h3>
+                        <span id="count-done" class="bg-gray-950 border border-gray-850 text-gray-400 text-xs px-2 py-0.5 rounded-md font-semibold">0</span>
+                    </div>
+                    <div id="col-done" class="space-y-4 flex-grow overflow-y-auto"></div>
+                </div>
             </div>
         </section>
 
@@ -335,7 +461,7 @@
                 </div>
                 <div>
                     <h3 class="text-lg font-bold font-outfit text-gray-100">AI Remediation Advisor (LangChain + RAG)</h3>
-                    <p class="text-xs text-gray-400">Ask the LLM for plain language explanations, Sweden MSB regulatory mandates, and quick code solutions.</p>
+                    <p class="text-xs text-gray-400">Select your preferred LLM provider in settings. Local fallback executes offline.</p>
                 </div>
             </div>
 
@@ -365,22 +491,15 @@
             <h3 class="text-2xl font-bold font-outfit text-gray-100 border-b border-gray-800 pb-4">Platform Configuration</h3>
             
             <form onsubmit="saveSettings(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-2">Google Gemini API Key</label>
-                    <input type="password" id="input-gemini-key" placeholder="AI advisor reasoning key (Optional - falls back to local analyzer)" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-primary">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-2">Shodan API Key</label>
-                    <input type="password" id="input-shodan-key" placeholder="External threat scanner key (Optional)" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-primary">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-2">Slack Webhook URL</label>
-                    <input type="text" id="input-slack-webhook" placeholder="https://hooks.slack.com/services/..." class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-primary">
-                </div>
-
                 <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-2">Active LLM Provider</label>
+                        <select id="input-llm-provider" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-primary" onchange="toggleProviderKeys(this.value)">
+                            <option value="gemini">Google Gemini 1.5 Pro</option>
+                            <option value="openai">OpenAI GPT-4 Turbo</option>
+                            <option value="claude">Anthropic Claude 3.5 Sonnet</option>
+                        </select>
+                    </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-400 uppercase mb-2">Continuous Monitoring Interval</label>
                         <select id="input-scan-frequency" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-primary">
@@ -391,11 +510,36 @@
                             <option value="1440">Daily</option>
                         </select>
                     </div>
+                </div>
 
-                    <div class="flex items-center space-x-3 pt-6">
-                        <input type="checkbox" id="input-monitoring-active" class="w-4 h-4 accent-cyber-primary rounded">
-                        <label class="text-xs font-semibold text-gray-200">Active background agent</label>
-                    </div>
+                <div id="key-gemini" class="space-y-2">
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-2">Google Gemini API Key</label>
+                    <input type="password" id="input-gemini-key" placeholder="AI advisor reasoning key..." class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-primary">
+                </div>
+
+                <div id="key-openai" class="space-y-2 hidden">
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-2">OpenAI API Key</label>
+                    <input type="password" id="input-openai-key" placeholder="sk-proj-..." class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-primary">
+                </div>
+
+                <div id="key-claude" class="space-y-2 hidden">
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-2">Anthropic Claude API Key</label>
+                    <input type="password" id="input-claude-key" placeholder="key-..." class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-primary">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-2">Shodan API Key</label>
+                    <input type="password" id="input-shodan-key" placeholder="External threat footprint scanner key (Optional)" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-primary">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-2">Slack Webhook URL</label>
+                    <input type="text" id="input-slack-webhook" placeholder="https://hooks.slack.com/services/..." class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-primary">
+                </div>
+
+                <div class="flex items-center space-x-3 pt-4 border-t border-gray-850">
+                    <input type="checkbox" id="input-monitoring-active" class="w-4 h-4 accent-cyber-primary rounded">
+                    <label class="text-xs font-semibold text-gray-200">Active background agent scheduled scans</label>
                 </div>
 
                 <div class="pt-4">
@@ -417,25 +561,21 @@
     <!-- Frontend Core Scripts -->
     <script>
         const API_BASE = "/api/v1";
+        let currentOrgId = 1;
         let trendChartInstance = null;
+        let socket = null;
 
         // Initialize UI Elements
-        document.addEventListener("DOMContentLoaded", () => {
+        document.addEventListener("DOMContentLoaded", async () => {
+            await loadOrganizations();
             lucide.createIcons();
-            loadDashboardStats();
-            loadAssets();
-            loadGapAnalysis();
-            loadSettings();
-            
-            // Poll for terminal logs and dashboard metrics every 5 seconds
-            setInterval(() => {
-                loadScanLogs();
-            }, 3000);
+            loadAllData();
+            initWebSocket();
         });
 
         // Tab Navigation Router
         function switchTab(tabName) {
-            const tabs = ['dashboard', 'scanner', 'gap', 'ai', 'settings'];
+            const tabs = ['dashboard', 'scanner', 'gap', 'remediation', 'ai', 'settings'];
             tabs.forEach(t => {
                 const el = document.getElementById(`tab-${t}-content`);
                 const btn = document.getElementById(`btn-${t}`);
@@ -449,54 +589,115 @@
                     btn.classList.add('text-gray-400');
                 }
             });
+            
             // Specific load triggers
             if (tabName === 'dashboard') {
                 loadDashboardStats();
             } else if (tabName === 'scanner') {
                 loadAssets();
-                loadScanLogs();
             } else if (tabName === 'gap') {
                 loadGapAnalysis();
+            } else if (tabName === 'remediation') {
+                loadTasks();
+            }
+        }
+
+        // ================== SAAS SCOPE LOGICS ==================
+
+        async function loadOrganizations() {
+            try {
+                const res = await fetch(`${API_BASE}/organizations`);
+                const orgs = await res.json();
+                const selector = document.getElementById("org-selector");
+                selector.innerHTML = "";
+                orgs.forEach(o => {
+                    selector.innerHTML += `<option value="${o.id}">${o.name}</option>`;
+                });
+                
+                if (orgs.length > 0) {
+                    currentOrgId = orgs[0].id;
+                    selector.value = currentOrgId;
+                }
+            } catch (err) {
+                console.error("Failed to fetch organizations:", err);
+            }
+        }
+
+        function changeOrganization(orgId) {
+            currentOrgId = parseInt(orgId);
+            loadAllData();
+            initWebSocket();
+        }
+
+        function openNewOrgModal() {
+            document.getElementById("new-org-modal").classList.remove("hidden");
+        }
+
+        function closeNewOrgModal() {
+            document.getElementById("new-org-modal").classList.add("hidden");
+            document.getElementById("new-org-name-input").value = "";
+        }
+
+        async function createOrganization() {
+            const name = document.getElementById("new-org-name-input").value.trim();
+            if (!name) return;
+            try {
+                const res = await fetch(`${API_BASE}/organizations`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: name })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    closeNewOrgModal();
+                    await loadOrganizations();
+                    currentOrgId = data.id;
+                    document.getElementById("org-selector").value = currentOrgId;
+                    loadAllData();
+                    initWebSocket();
+                }
+            } catch (err) {
+                console.error(err);
             }
         }
 
         // ================== DATA CALLS ==================
 
+        function loadAllData() {
+            loadDashboardStats();
+            loadAssets();
+            loadGapAnalysis();
+            loadSettings();
+            loadTasks();
+        }
+
         async function loadDashboardStats() {
             try {
-                const res = await fetch(`${API_BASE}/dashboard/stats`);
+                const res = await fetch(`${API_BASE}/dashboard/stats?org_id=${currentOrgId}`);
                 const data = await res.json();
                 
-                // Set score gauge circular offset
                 const score = data.overall_compliance_score;
                 document.getElementById("score-text").innerText = `${score.toFixed(1)}%`;
                 
                 const circle = document.getElementById("score-circle");
-                const circumference = 339.29; // 2 * pi * 54
+                const circumference = 339.29; 
                 const offset = circumference - (score / 100) * circumference;
                 circle.style.strokeDashoffset = offset;
                 
-                // Colorize gauge based on score
-                if (score < 40) {
-                    circle.className.baseVal = "text-cyber-rose";
-                } else if (score < 80) {
-                    circle.className.baseVal = "text-cyber-accent";
-                } else {
-                    circle.className.baseVal = "text-cyber-emerald";
-                }
+                if (score < 40) circle.className.baseVal = "text-cyber-rose";
+                else if (score < 80) circle.className.baseVal = "text-cyber-accent";
+                else circle.className.baseVal = "text-cyber-emerald";
 
                 document.getElementById("stat-scanned").innerText = data.scanned_assets_count;
                 document.getElementById("stat-in-scope").innerText = data.in_scope_assets_count;
                 document.getElementById("stat-gaps").innerText = data.critical_gaps_count;
 
-                // Render Trend Line Chart
                 renderHistoryChart(data.history);
 
-                // Render Critical Assets list
                 const critBox = document.getElementById("dashboard-critical-assets");
                 critBox.innerHTML = "";
                 if (data.critical_assets.length === 0) {
-                    critBox.innerHTML = `<div class="text-center text-gray-500 py-10 text-xs">No Critical threat assets active.</div>`;
+                    critBox.innerHTML = `<div class="text-center text-gray-500 py-10 text-sm">No critical assets found.</div>`;
                 } else {
                     data.critical_assets.forEach(asset => {
                         const item = document.createElement("div");
@@ -506,10 +707,10 @@
                                 <span class="h-2.5 w-2.5 rounded-full bg-cyber-rose animate-pulse"></span>
                                 <div>
                                     <p class="text-sm font-bold font-outfit text-gray-100">${asset.ip}</p>
-                                    <p class="text-[10px] text-gray-400">${asset.hostname || 'Embedded Client'}</p>
+                                    <p class="text-[10px] text-gray-400">${asset.hostname || 'Embedded Node'}</p>
                                 </div>
                             </div>
-                            <span class="text-[10px] bg-red-950 border border-red-800 text-cyber-rose px-2.5 py-0.5 rounded font-medium">${asset.scope_sector || 'OT Core'}</span>
+                            <span class="text-[10px] bg-red-950 border border-red-800 text-cyber-rose px-2.5 py-0.5 rounded font-medium">${asset.scope_sector || 'Outside Scope'}</span>
                         `;
                         critBox.appendChild(item);
                     });
@@ -517,6 +718,10 @@
             } catch (err) {
                 console.error("Dashboard error:", err);
             }
+        }
+
+        function downloadReport() {
+            window.open(`${API_BASE}/report/pdf?org_id=${currentOrgId}`, '_blank');
         }
 
         function renderHistoryChart(history) {
@@ -547,20 +752,10 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
-                        y: {
-                            min: 0,
-                            max: 100,
-                            grid: { color: 'rgba(255,255,255,0.05)' },
-                            ticks: { color: '#9ca3af' }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { color: '#9ca3af' }
-                        }
+                        y: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } },
+                        x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
                     }
                 }
             });
@@ -568,13 +763,13 @@
 
         async function loadAssets() {
             try {
-                const res = await fetch(`${API_BASE}/assets`);
+                const res = await fetch(`${API_BASE}/assets?org_id=${currentOrgId}`);
                 const assets = await res.json();
                 const body = document.getElementById("assets-table-body");
                 body.innerHTML = "";
 
                 if (assets.length === 0) {
-                    body.innerHTML = `<tr><td colspan="7" class="text-center text-gray-500 py-10">No network assets discovered. Launch scanner.</td></tr>`;
+                    body.innerHTML = `<tr><td colspan="7" class="text-center text-gray-500 py-12 italic text-xs">No network assets discovered. Launch sweep.</td></tr>`;
                     return;
                 }
 
@@ -583,36 +778,48 @@
                     row.className = "hover:bg-gray-900 hover:bg-opacity-40 transition-colors";
                     
                     const scopeBadge = asset.in_scope 
-                        ? `<span class="bg-emerald-950 border border-emerald-800 text-cyber-emerald px-2 py-0.5 rounded text-xs">${asset.scope_sector}</span>`
-                        : `<span class="bg-gray-800 border border-gray-700 text-gray-400 px-2 py-0.5 rounded text-xs">Out of Scope</span>`;
+                        ? `<span class="bg-emerald-950 border border-emerald-900 text-cyber-emerald px-2.5 py-0.5 rounded text-xs font-semibold">${asset.scope_sector}</span>`
+                        : `<span class="bg-gray-800 border border-gray-700 text-gray-400 px-2.5 py-0.5 rounded text-xs">Out of Scope</span>`;
 
-                    const critColor = asset.criticality === "Critical" ? "text-cyber-rose bg-red-950 bg-opacity-40 border border-red-800" 
-                        : (asset.criticality === "High" ? "text-cyber-accent bg-amber-950 bg-opacity-40 border border-amber-800" : "text-gray-300 bg-gray-850 border border-gray-800");
+                    const risk = asset.dynamic_risk_score || 1.0;
+                    const riskColor = risk >= 12.0 ? 'text-cyber-rose bg-red-950 bg-opacity-20 border-red-900'
+                        : risk >= 6.0 ? 'text-cyber-accent bg-amber-950 bg-opacity-20 border-amber-900'
+                        : 'text-cyber-emerald bg-emerald-950 bg-opacity-20 border-emerald-900';
 
-                    const shodanFlag = asset.shodan_data 
-                        ? `<span class="h-2 w-2 rounded-full bg-cyber-rose inline-block" title="Exposed vulnerabilities detected in Shodan scans!"></span>`
-                        : `<span class="h-2 w-2 rounded-full bg-cyber-emerald inline-block" title="Threat intel verified clear."></span>`;
+                    let vulnBadges = `<span class="text-gray-500 italic text-[10px]">Clean perimeter</span>`;
+                    if (asset.shodan_data) {
+                        try {
+                            const detail = JSON.parse(asset.shodan_data);
+                            if (detail.vulns_detail && detail.vulns_detail.length > 0) {
+                                vulnBadges = `<div class="flex flex-wrap justify-end gap-1.5 max-w-[280px] ml-auto">`;
+                                detail.vulns_detail.forEach(v => {
+                                    vulnBadges += `
+                                        <span class="inline-flex items-center space-x-1 bg-red-950 bg-opacity-40 border border-red-900 border-opacity-40 text-cyber-rose px-2 py-0.5 rounded-lg text-[9px] font-bold font-mono" title="${v.severity}">
+                                            <span>${v.cve_id}</span>
+                                            <span class="opacity-60 bg-red-900 text-white rounded px-1 ml-1 text-[8px]">${v.cvss}</span>
+                                        </span>
+                                    `;
+                                });
+                                vulnBadges += `</div>`;
+                            }
+                        } catch(e) {}
+                    }
 
                     row.innerHTML = `
-                        <td class="px-6 py-4 font-semibold text-gray-100">${asset.ip}</td>
+                        <td class="px-6 py-4 font-bold font-mono text-gray-100">${asset.ip}</td>
                         <td class="px-6 py-4">
                             <div>
-                                <p class="text-sm font-medium text-gray-200">${asset.hostname || 'Unnamed local client'}</p>
-                                <span class="text-[10px] text-gray-400">${asset.mac_address || '00:00:00:00:00:00'}</span>
+                                <p class="text-sm font-semibold text-gray-200 font-outfit">${asset.hostname || 'Unknown client'}</p>
+                                <span class="text-[10px] text-gray-500">${asset.mac_address || '00:00:00:00:00:00'}</span>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-xs font-mono text-gray-400">${asset.os || 'RTOS Module'}</td>
-                        <td class="px-6 py-4 font-mono text-cyber-secondary text-xs">${asset.ports || 'None'}</td>
-                        <td class="px-6 py-4">${scopeBadge}</td>
+                        <td class="px-6 py-4 text-xs text-gray-400 font-outfit font-medium">${asset.scope_sector || 'OT Infrastructure'}</td>
                         <td class="px-6 py-4">
-                            <span class="px-2 py-0.5 rounded text-xs ${critColor}">${asset.criticality}</span>
+                            <span class="px-2.5 py-1 rounded-xl text-[10px] font-bold border ${riskColor}">${risk.toFixed(1)} Risk Index</span>
                         </td>
-                        <td class="px-6 py-4 text-center">
-                            <div class="flex items-center space-x-1 justify-center">
-                                ${shodanFlag}
-                                <button onclick="alert('Asset Scan Summary: ${asset.hostname || asset.ip}\\nPorts: ${asset.ports || "None"}\\nSector scope: ${asset.scope_sector || "Out of Scope"}\\nShodan indicators: ${asset.shodan_data || "None"}')" class="text-cyber-secondary hover:underline text-xs">View Data</button>
-                            </div>
-                        </td>
+                        <td class="px-6 py-4 font-mono text-cyber-secondary font-semibold text-xs">${asset.ports || 'None'}</td>
+                        <td class="px-6 py-4">${scopeBadge}</td>
+                        <td class="px-6 py-4 text-right">${vulnBadges}</td>
                     `;
                     body.appendChild(row);
                 });
@@ -621,118 +828,183 @@
             }
         }
 
-        async function loadScanLogs() {
-            try {
-                const res = await fetch(`${API_BASE}/scan/logs`);
-                const logs = await res.json();
-                const term = document.getElementById("terminal-console");
-                
-                // Only rewrite if logs exist
-                if (logs.length > 0) {
-                    term.innerHTML = "";
-                    // Logs are returned newest first, we reverse to display chronologically
-                    logs.reverse().forEach(log => {
-                        const line = document.createElement("div");
-                        let color = "text-white";
-                        let prefix = "[INFO]";
-                        
-                        if (log.level === "SUCCESS") {
-                            color = "text-cyber-emerald font-bold";
-                            prefix = "✔ [SUCCESS]";
-                        } else if (log.level === "WARNING") {
-                            color = "text-cyber-accent font-semibold";
-                            prefix = "⚠ [WARNING]";
-                        } else if (log.level === "ERROR") {
-                            color = "text-cyber-rose font-bold";
-                            prefix = "🚨 [CRITICAL]";
-                        } else {
-                            color = "text-gray-300";
-                            prefix = "ℹ [INFO]";
-                        }
-                        
-                        line.className = `${color} leading-5 flex space-x-2`;
-                        line.innerHTML = `
-                            <span class="text-gray-500 font-mono flex-shrink-0">${new Date(log.timestamp).toLocaleTimeString()}</span>
-                            <span class="font-bold flex-shrink-0">${prefix}</span>
-                            <span>${log.message}</span>
-                        `;
-                        term.appendChild(line);
-                    });
-                    
-                    // Auto-scroll to bottom
-                    term.scrollTop = term.scrollHeight;
-                }
-            } catch (err) {
-                console.error(err);
+        // ================== WEBSOCKET STREAMING LOGS ==================
+
+        function initWebSocket() {
+            if (socket) {
+                socket.close();
             }
+
+            const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsHost = window.location.host;
+            const wsUrl = `${wsProto}//${wsHost}${API_BASE}/scan/ws-logs?org_id=${currentOrgId}`;
+            console.log("[WebSocket] Opening log listener channel:", wsUrl);
+
+            socket = new WebSocket(wsUrl);
+            const term = document.getElementById("terminal-console");
+            term.innerHTML = `<div class="text-gray-500">Live logs buffer connected. Sweeping sweeps console logs...</div>`;
+
+            socket.onmessage = (event) => {
+                try {
+                    const log = JSON.parse(event.data);
+                    
+                    let color = "text-white";
+                    let prefix = "[INFO]";
+                    if (log.level === "SUCCESS") {
+                        color = "text-cyber-emerald font-bold";
+                        prefix = "✔ [SUCCESS]";
+                    } else if (log.level === "WARNING") {
+                        color = "text-cyber-accent font-semibold";
+                        prefix = "⚠ [WARNING]";
+                    } else if (log.level === "ERROR") {
+                        color = "text-cyber-rose font-bold";
+                        prefix = "🚨 [CRITICAL]";
+                    } else {
+                        color = "text-green-400";
+                        prefix = "ℹ [INFO]";
+                    }
+
+                    const line = document.createElement("div");
+                    line.className = `${color} leading-5 flex space-x-2`;
+                    line.innerHTML = `
+                        <span class="text-gray-500 font-mono flex-shrink-0">${new Date(log.timestamp).toLocaleTimeString()}</span>
+                        <span class="font-bold flex-shrink-0">${prefix}</span>
+                        <span>${log.message}</span>
+                    `;
+                    term.appendChild(line);
+                    term.scrollTop = term.scrollHeight;
+                } catch (err) {
+                    console.error("Socket format error:", err);
+                }
+            };
+
+            socket.onerror = (err) => {
+                console.error("[WebSocket] Terminal connection error:", err);
+            };
         }
 
         async function triggerScan() {
             const target = document.getElementById("scan-target-input").value;
             const realScan = document.getElementById("scan-mode-checkbox").checked;
+            const btn = document.getElementById("scan-btn");
             
+            btn.disabled = true;
+            btn.innerHTML = `<span class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></span>Sweeping IP scope...`;
+
             try {
-                const res = await fetch(`${API_BASE}/scan?target=${encodeURIComponent(target)}&real_scan=${realScan}`, {
+                const res = await fetch(`${API_BASE}/scan?target=${encodeURIComponent(target)}&real_scan=${realScan}&org_id=${currentOrgId}`, {
                     method: "POST"
                 });
-                const data = await res.json();
-                
-                // Show notification toast or message
-                const consoleBox = document.getElementById("terminal-console");
-                consoleBox.innerHTML += `<div class="text-cyber-secondary font-bold font-mono">--- MANUAL TRIGGER: Discovery Scan Scheduled. Streaming logs... ---</div>`;
-                switchTab('scanner');
+                if (res.ok) {
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = `<i data-lucide="radio" class="w-4 h-4 text-white mr-2"></i>Execute Subnet Scan`;
+                        lucide.createIcons();
+                        loadAssets();
+                        loadDashboardStats();
+                    }, 4500);
+                }
             } catch (err) {
                 console.error(err);
+                btn.disabled = false;
             }
         }
 
         async function clearLogs() {
-            await fetch(`${API_BASE}/scan/logs/clear`, { method: "POST" });
+            if (!confirm("Wipe terminal log database entries?")) return;
+            await fetch(`${API_BASE}/scan/logs/clear?org_id=${currentOrgId}`, { method: "POST" });
             document.getElementById("terminal-console").innerHTML = `<div class="text-gray-500">Terminal console wiped.</div>`;
         }
 
+        // ================== GAP ENGINE MATRIX ==================
+
         async function loadGapAnalysis() {
             try {
-                const res = await fetch(`${API_BASE}/gap-analysis`);
+                const res = await fetch(`${API_BASE}/gap-analysis?org_id=${currentOrgId}`);
                 const gaps = await res.json();
                 const container = document.getElementById("gaps-container");
+                const taskSelect = document.getElementById("task-gap-id");
+
                 container.innerHTML = "";
+                taskSelect.innerHTML = "";
 
                 gaps.forEach(gap => {
-                    const card = document.createElement("div");
-                    const statusColor = gap.status === "Compliant" ? "text-cyber-emerald bg-emerald-950 border-emerald-800" 
-                        : (gap.status === "Partial" ? "text-cyber-accent bg-amber-950 border-amber-800" : "text-cyber-rose bg-red-950 border-red-800");
+                    taskSelect.innerHTML += `<option value="${gap.article_id}">${gap.article_id} - ${gap.control_name}</option>`;
                     
-                    card.className = "glass-card rounded-2xl p-6 space-y-4 border border-opacity-30 relative";
+                    const card = document.createElement("div");
+                    const statusColor = gap.status === "Compliant" ? "text-cyber-emerald bg-emerald-950 border-emerald-900" 
+                        : (gap.status === "Partial" ? "text-cyber-accent bg-amber-950 border-amber-900" : "text-cyber-rose bg-red-950 border-red-900");
+                    
+                    let evidenceLine = `<span class="text-[10px] text-gray-500 italic block mt-1">No policy evidence attached yet.</span>`;
+                    if (gap.evidence_file_path) {
+                        const fileName = gap.evidence_file_path.split('/').pop();
+                        evidenceLine = `
+                            <div class="flex items-center justify-between bg-gray-950 p-2.5 border border-gray-850 rounded-xl text-xs mt-2">
+                                <div class="flex items-center space-x-2 text-gray-300">
+                                    <i data-lucide="file-text" class="w-4 h-4 text-cyber-primary"></i>
+                                    <span class="font-mono text-[10px] truncate max-w-[180px]">${fileName}</span>
+                                </div>
+                                <a href="/${gap.evidence_file_path}" target="_blank" class="text-cyber-primary hover:text-white flex items-center space-x-1 font-semibold text-[10px] transition-all">
+                                    <span>View File</span>
+                                    <i data-lucide="external-link" class="w-3 h-3"></i>
+                                </a>
+                            </div>
+                        `;
+                    }
+
+                    card.className = `glass-card rounded-2xl p-6 space-y-4 border border-opacity-30 relative transition-all duration-300 ${
+                        gap.status === "Compliant" ? "border-emerald-950" : gap.status === "Partial" ? "border-amber-950" : "border-red-950"
+                    }`;
                     card.innerHTML = `
                         <div class="flex items-center justify-between border-b border-gray-800 pb-3">
                             <div>
                                 <span class="text-xs font-mono font-bold text-cyber-secondary">${gap.article_id}</span>
-                                <h4 class="text-base font-bold font-outfit text-gray-100 mt-0.5">${gap.category}</h4>
+                                <h4 class="text-base font-bold font-outfit text-gray-100 mt-0.5">${gap.control_name}</h4>
                             </div>
                             <span class="px-2.5 py-0.5 rounded text-xs border font-medium ${statusColor}">${gap.status}</span>
                         </div>
                         
-                        <p class="text-xs text-gray-300">${gap.description}</p>
+                        <p class="text-xs text-gray-405 leading-relaxed">${gap.description}</p>
                         
-                        <div class="space-y-2">
+                        <div class="space-y-2 bg-gray-900 bg-opacity-40 p-4 rounded-xl border border-gray-800">
                             <div class="flex justify-between items-center text-xs">
-                                <span class="text-gray-400 font-semibold uppercase">Maturity score</span>
-                                <span class="font-extrabold text-cyber-secondary font-outfit" id="val-${gap.article_id}">${gap.score}%</span>
+                                <span class="text-gray-400 font-semibold uppercase">Maturity maturity</span>
+                                <span class="font-extrabold text-cyber-secondary font-outfit text-sm" id="val-${gap.article_id}">${gap.score}%</span>
                             </div>
-                            <input type="range" min="0" max="100" value="${gap.score}" class="w-full h-1.5 bg-gray-900 rounded-lg appearance-none cursor-pointer accent-cyber-primary" 
+                            <input type="range" min="0" max="100" value="${gap.score}" class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-cyber-primary" 
                                 oninput="document.getElementById('val-${gap.article_id}').innerText = this.value + '%'"
                                 onchange="saveGapScore('${gap.article_id}', this.value)">
                         </div>
 
-                        <div class="bg-gray-950 bg-opacity-60 border border-gray-850 p-3.5 rounded-xl space-y-2 text-xs">
-                            <span class="text-gray-400 uppercase font-semibold block">Auditor comments</span>
-                            <textarea id="comment-${gap.article_id}" class="w-full bg-gray-900 border border-gray-800 rounded-lg p-2 text-xs focus:outline-none focus:border-cyber-primary text-gray-300" rows="2">${gap.comments || ''}</textarea>
-                            <button onclick="saveAuditorNotes('${gap.article_id}')" class="bg-gray-800 border border-gray-700 hover:bg-gray-700 text-gray-200 px-3 py-1 rounded text-[10px] font-semibold transition-all">Save Notes</button>
+                        <div class="bg-gray-950 bg-opacity-60 border border-gray-850 p-4 rounded-xl space-y-3.5 text-xs">
+                            <div class="space-y-1">
+                                <label class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Auditor findings</label>
+                                <textarea id="comment-${gap.article_id}" class="w-full bg-gray-900 border border-gray-800 rounded-lg p-2.5 text-xs text-gray-300" rows="2" placeholder="Exemptions or annotations...">${gap.comments || ''}</textarea>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Remediation steps</label>
+                                <textarea id="steps-${gap.article_id}" class="w-full bg-gray-900 border border-gray-800 rounded-lg p-2.5 text-xs text-gray-300" rows="2" placeholder="Milestones required to close gap...">${gap.remediation_steps || ''}</textarea>
+                            </div>
+
+                            <div class="space-y-2 border-t border-gray-850 pt-3">
+                                <label class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Policy evidence</label>
+                                ${evidenceLine}
+                                <label class="w-full flex items-center justify-center space-x-2 bg-gray-900 hover:bg-gray-850 border border-dashed border-gray-800 hover:border-gray-700 text-gray-400 hover:text-white rounded-xl py-2 cursor-pointer transition-all">
+                                    <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                                    <span class="text-[10px] font-semibold">Upload Evidence Document</span>
+                                    <input type="file" class="hidden" onchange="uploadEvidence('${gap.article_id}', this.files[0])">
+                                </label>
+                            </div>
+
+                            <button onclick="saveAuditorNotes('${gap.article_id}')" class="w-full bg-cyber-primary text-white py-2 rounded-xl font-semibold transition-all flex items-center justify-center space-x-2 shadow-md">
+                                <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                                <span>Save Control Notes</span>
+                            </button>
                         </div>
                     `;
                     container.appendChild(card);
                 });
+                lucide.createIcons();
             } catch (err) {
                 console.error(err);
             }
@@ -740,7 +1012,7 @@
 
         async function saveGapScore(articleId, score) {
             try {
-                await fetch(`${API_BASE}/gap-analysis/${articleId}`, {
+                await fetch(`${API_BASE}/gap-analysis/${articleId}?org_id=${currentOrgId}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ score: parseInt(score) })
@@ -753,19 +1025,198 @@
 
         async function saveAuditorNotes(articleId) {
             const comments = document.getElementById(`comment-${articleId}`).value;
+            const steps = document.getElementById(`steps-${articleId}`).value;
             try {
-                const res = await fetch(`${API_BASE}/gap-analysis/${articleId}`, {
+                const res = await fetch(`${API_BASE}/gap-analysis/${articleId}?org_id=${currentOrgId}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ comments: comments })
+                    body: JSON.stringify({ comments: comments, remediation_steps: steps })
                 });
                 if (res.ok) {
-                    alert("Auditor notes and findings updated successfully!");
+                    alert("Audit annotations and steps updated successfully!");
                     loadGapAnalysis();
                     loadDashboardStats();
                 }
             } catch (err) {
                 console.error(err);
+            }
+        }
+
+        async function uploadEvidence(articleId, file) {
+            if (!file) return;
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const res = await fetch(`${API_BASE}/gap-analysis/${articleId}/evidence?org_id=${currentOrgId}`, {
+                    method: "POST",
+                    body: formData
+                });
+                if (res.ok) {
+                    alert("Auditor policy evidence uploaded successfully!");
+                    loadGapAnalysis();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // ================== REMEDIATION TASKS KANBAN ==================
+
+        function toggleNewTaskForm() {
+            const form = document.getElementById("new-task-form");
+            form.classList.toggle("hidden");
+        }
+
+        async function loadTasks() {
+            try {
+                const res = await fetch(`${API_BASE}/tasks?org_id=${currentOrgId}`);
+                const tasks = await res.json();
+                
+                const colOpen = document.getElementById("col-open");
+                const colProgress = document.getElementById("col-progress");
+                const colDone = document.getElementById("col-done");
+
+                colOpen.innerHTML = "";
+                colProgress.innerHTML = "";
+                colDone.innerHTML = "";
+
+                let openCount = 0, progressCount = 0, doneCount = 0;
+
+                tasks.forEach(task => {
+                    const card = document.createElement("div");
+                    card.className = "bg-gray-950 border border-gray-850 hover:border-gray-700 rounded-xl p-4 transition-all relative overflow-hidden group";
+                    
+                    let colBar = "bg-cyber-rose";
+                    let actionButton = "";
+
+                    if (task.status === "Open") {
+                        openCount++;
+                        colBar = "bg-cyber-rose";
+                        actionButton = `
+                            <button onclick="updateTaskStatus(${task.id}, 'In Progress')" class="text-[10px] bg-cyber-primary bg-opacity-20 hover:bg-opacity-40 text-cyber-primary font-medium px-2.5 py-1 rounded-md transition-all flex items-center space-x-1">
+                                <span>Claim</span> <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                            </button>
+                        `;
+                    } else if (task.status === "In Progress") {
+                        progressCount++;
+                        colBar = "bg-cyber-primary";
+                        actionButton = `
+                            <button onclick="updateTaskStatus(${task.id}, 'Done')" class="text-[10px] bg-cyber-emerald bg-opacity-20 hover:bg-opacity-40 text-cyber-emerald font-medium px-2.5 py-1 rounded-md transition-all flex items-center space-x-1">
+                                <span>Resolve</span> <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                            </button>
+                        `;
+                    } else {
+                        doneCount++;
+                        colBar = "bg-cyber-emerald";
+                        actionButton = `
+                            <button onclick="updateTaskStatus(${task.id}, 'In Progress')" class="text-[9px] border border-gray-800 text-gray-500 hover:text-white px-2 py-0.5 rounded-md transition-all">Reopen</button>
+                        `;
+                    }
+
+                    card.innerHTML = `
+                        <div class="absolute top-0 left-0 w-1 h-full ${colBar}"></div>
+                        <div class="flex justify-between items-start">
+                            <span class="text-[10px] font-semibold text-cyber-secondary bg-cyber-secondary bg-opacity-10 px-2 py-0.5 rounded-md uppercase font-outfit tracking-wide">${task.gap_id}</span>
+                            <button onclick="deleteTask(${task.id})" class="text-gray-500 hover:text-cyber-rose p-1 rounded-md hover:bg-gray-900 transition-all opacity-0 group-hover:opacity-100">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                        <h4 class="font-bold text-sm text-gray-100 font-outfit mt-2 leading-snug">${task.title}</h4>
+                        <p class="text-xs text-gray-400 mt-1 leading-relaxed">${task.description || 'No instructions provided.'}</p>
+                        
+                        <div class="mt-3 flex items-center justify-between text-[10px] text-gray-400 pt-2 border-t border-gray-900">
+                            <div class="flex items-center space-x-1">
+                                <i data-lucide="user" class="w-3 h-3 text-gray-500"></i>
+                                <span>${task.assignee || 'Unassigned'}</span>
+                            </div>
+                            ${task.due_date ? `
+                                <div class="flex items-center space-x-1 text-gray-500">
+                                    <i data-lucide="calendar" class="w-3 h-3"></i>
+                                    <span>${new Date(task.due_date).toLocaleDateString()}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="mt-3 flex justify-end space-x-1.5 pt-2 border-t border-gray-900">
+                            ${actionButton}
+                        </div>
+                    `;
+
+                    if (task.status === "Open") colOpen.appendChild(card);
+                    else if (task.status === "In Progress") colProgress.appendChild(card);
+                    else colDone.appendChild(card);
+                });
+
+                document.getElementById("count-open").innerText = openCount;
+                document.getElementById("count-progress").innerText = progressCount;
+                document.getElementById("count-done").innerText = doneCount;
+                lucide.createIcons();
+            } catch(err) {
+                console.error(err);
+            }
+        }
+
+        async function submitNewTask() {
+            const gapId = document.getElementById("task-gap-id").value;
+            const title = document.getElementById("task-title").value.trim();
+            const desc = document.getElementById("task-desc").value.trim();
+            const assignee = document.getElementById("task-assignee").value.trim();
+            const due = document.getElementById("task-due").value;
+
+            if (!title) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/tasks?org_id=${currentOrgId}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        gap_id: gapId,
+                        title: title,
+                        description: desc,
+                        assignee: assignee,
+                        due_date: due ? new Date(due).toISOString() : null,
+                        status: "Open"
+                    })
+                });
+                if (res.ok) {
+                    toggleNewTaskForm();
+                    document.getElementById("task-title").value = "";
+                    document.getElementById("task-desc").value = "";
+                    document.getElementById("task-assignee").value = "";
+                    document.getElementById("task-due").value = "";
+                    loadTasks();
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        async function updateTaskStatus(taskId, nextStatus) {
+            try {
+                const res = await fetch(`${API_BASE}/tasks/${taskId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ status: nextStatus })
+                });
+                if (res.ok) {
+                    loadTasks();
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        async function deleteTask(taskId) {
+            if (!confirm("Delete this remediation task?")) return;
+            try {
+                const res = await fetch(`${API_BASE}/tasks/${taskId}`, {
+                    method: "DELETE"
+                });
+                if (res.ok) {
+                    loadTasks();
+                }
+            } catch(e) {
+                console.error(e);
             }
         }
 
@@ -779,23 +1230,23 @@
             input.value = "";
             const box = document.getElementById("chat-messages-box");
 
-            // Append User Question
+            // User Question Card
             const userMsg = document.createElement("div");
             userMsg.className = "flex space-x-3 max-w-[80%] self-end justify-end ml-auto";
             userMsg.innerHTML = `
                 <div class="bg-cyber-primary rounded-2xl rounded-tr-none p-3.5 text-sm text-white">
                     ${query}
                 </div>
-                <div class="h-8 w-8 rounded-full bg-cyan-800 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">👤</div>
+                <div class="h-8 w-8 rounded-full bg-cyan-800 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold font-outfit">👤</div>
             `;
             box.appendChild(userMsg);
             box.scrollTop = box.scrollHeight;
 
-            // Append Loading Indicator
+            // Loading AI Panel
             const loader = document.createElement("div");
-            loader.className = "flex space-x-3 max-w-[80%]" + " loader-ai";
+            loader.className = "flex space-x-3 max-w-[80%] loader-ai";
             loader.innerHTML = `
-                <div class="h-8 w-8 rounded-full bg-cyber-primary flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">🤖</div>
+                <div class="h-8 w-8 rounded-full bg-cyber-primary flex-shrink-0 flex items-center justify-center text-white text-xs font-bold font-outfit">🤖</div>
                 <div class="bg-gray-800 bg-opacity-80 rounded-2xl rounded-tl-none p-3.5 text-sm text-gray-400 flex items-center space-x-2">
                     <span class="animate-bounce">●</span>
                     <span class="animate-bounce" style="animation-delay: 0.2s">●</span>
@@ -807,21 +1258,17 @@
             box.scrollTop = box.scrollHeight;
 
             try {
-                const res = await fetch(`${API_BASE}/advisor/query`, {
+                const res = await fetch(`${API_BASE}/advisor/query?org_id=${currentOrgId}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ query: query })
                 });
                 const data = await res.json();
-                
-                // Remove loader
                 box.removeChild(loader);
 
-                // Append AI Response (Simple formatted string block)
                 const aiMsg = document.createElement("div");
                 aiMsg.className = "flex space-x-3 max-w-[90%]";
                 
-                // Simple markdown formatter helper for high fidelity display
                 const formattedHtml = data.response
                     .replace(/\n\n/g, '<br/><br/>')
                     .replace(/\n/g, '<br/>')
@@ -834,7 +1281,7 @@
                     .replace(/> (.*)/g, '<blockquote class="border-l-4 border-cyber-accent bg-gray-900 bg-opacity-40 p-2 text-xs italic my-1 text-cyber-accent">$1</blockquote>');
 
                 aiMsg.innerHTML = `
-                    <div class="h-8 w-8 rounded-full bg-cyber-primary flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">🤖</div>
+                    <div class="h-8 w-8 rounded-full bg-cyber-primary flex-shrink-0 flex items-center justify-center text-white text-xs font-bold font-outfit">🤖</div>
                     <div class="bg-gray-800 bg-opacity-80 rounded-2xl rounded-tl-none p-4 text-sm text-gray-100 leading-relaxed max-w-full overflow-hidden">
                         ${formattedHtml}
                         ${data.sources.length > 0 ? `<div class="mt-3 pt-2 border-t border-gray-750 text-[10px] text-gray-500 font-mono">Sources referenced: ${data.sources.join(" | ")}</div>` : ''}
@@ -852,16 +1299,20 @@
 
         async function loadSettings() {
             try {
-                const res = await fetch(`${API_BASE}/settings`);
+                const res = await fetch(`${API_BASE}/settings?org_id=${currentOrgId}`);
                 const settings = await res.json();
                 
+                document.getElementById("input-llm-provider").value = settings.llm_provider || "gemini";
                 document.getElementById("input-gemini-key").value = settings.gemini_key || "";
+                document.getElementById("input-openai-key").value = settings.openai_key || "";
+                document.getElementById("input-claude-key").value = settings.claude_key || "";
                 document.getElementById("input-shodan-key").value = settings.shodan_key || "";
                 document.getElementById("input-slack-webhook").value = settings.slack_webhook || "";
                 document.getElementById("input-scan-frequency").value = settings.scan_frequency || 60;
                 document.getElementById("input-monitoring-active").checked = settings.monitoring_active;
                 
-                // Show indicators
+                toggleProviderKeys(settings.llm_provider || "gemini");
+
                 const indicator = document.getElementById("shodan-indicator");
                 if (settings.shodan_key) {
                     indicator.innerText = "ACTIVE";
@@ -875,21 +1326,36 @@
             }
         }
 
+        function toggleProviderKeys(provider) {
+            const keys = ['gemini', 'openai', 'claude'];
+            keys.forEach(k => {
+                const el = document.getElementById(`key-${k}`);
+                if (k === provider) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+        }
+
         async function saveSettings(e) {
             e.preventDefault();
             
+            const provider = document.getElementById("input-llm-provider").value;
             const gemini = document.getElementById("input-gemini-key").value;
+            const openai = document.getElementById("input-openai-key").value;
+            const claude = document.getElementById("input-claude-key").value;
             const shodan = document.getElementById("input-shodan-key").value;
             const slack = document.getElementById("input-slack-webhook").value;
             const freq = document.getElementById("input-scan-frequency").value;
             const monitoring = document.getElementById("input-monitoring-active").checked;
             
             try {
-                const res = await fetch(`${API_BASE}/settings`, {
+                const res = await fetch(`${API_BASE}/settings?org_id=${currentOrgId}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
+                        llm_provider: provider,
                         gemini_key: gemini,
+                        openai_key: openai,
+                        claude_key: claude,
                         shodan_key: shodan,
                         slack_webhook: slack,
                         scan_frequency: parseInt(freq),
@@ -898,7 +1364,7 @@
                 });
                 
                 if (res.ok) {
-                    alert("System configuration credentials updated and continuous background scanning agent rescheduled successfully!");
+                    alert("System configuration credentials updated and monitoring agent updated successfully!");
                     loadSettings();
                 }
             } catch (err) {

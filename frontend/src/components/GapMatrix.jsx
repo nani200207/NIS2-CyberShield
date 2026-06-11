@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import { ShieldAlert, ShieldCheck, Check, Save } from 'lucide-react'
+import { ShieldAlert, ShieldCheck, Check, Save, Upload, FileText, ExternalLink } from 'lucide-react'
 
-export default function GapMatrix({ gaps, API_BASE, fetchAllData }) {
+export default function GapMatrix({ gaps, currentOrgId, API_BASE, fetchAllData }) {
   const [editedGaps, setEditedGaps] = useState({})
   const [savingState, setSavingState] = useState({})
 
@@ -53,7 +53,7 @@ export default function GapMatrix({ gaps, API_BASE, fetchAllData }) {
 
     setSavingState(prev => ({ ...prev, [articleId]: 'saving' }))
     try {
-      const res = await fetch(`${API_BASE}/gap-analysis/${encodeURIComponent(articleId)}`, {
+      const res = await fetch(`${API_BASE}/gap-analysis/${encodeURIComponent(articleId)}?org_id=${currentOrgId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatePayload)
@@ -69,6 +69,33 @@ export default function GapMatrix({ gaps, API_BASE, fetchAllData }) {
       }
     } catch (err) {
       console.error(err)
+      setSavingState(prev => ({ ...prev, [articleId]: 'error' }))
+    }
+  }
+
+  // Handle evidence document upload
+  const handleFileUpload = async (articleId, file) => {
+    if (!file) return
+    const formData = new FormData()
+    formData.append('file', file)
+
+    setSavingState(prev => ({ ...prev, [articleId]: 'saving_file' }))
+    try {
+      const res = await fetch(`${API_BASE}/gap-analysis/${encodeURIComponent(articleId)}/evidence?org_id=${currentOrgId}`, {
+        method: 'POST',
+        body: formData
+      })
+      if (res.ok) {
+        setSavingState(prev => ({ ...prev, [articleId]: 'saved_file' }))
+        fetchAllData()
+        setTimeout(() => {
+          setSavingState(prev => ({ ...prev, [articleId]: null }))
+        }, 2000)
+      } else {
+        setSavingState(prev => ({ ...prev, [articleId]: 'error' }))
+      }
+    } catch (err) {
+      console.error("Evidence upload failed:", err)
       setSavingState(prev => ({ ...prev, [articleId]: 'error' }))
     }
   }
@@ -98,15 +125,20 @@ export default function GapMatrix({ gaps, API_BASE, fetchAllData }) {
     )
   }
 
+  // Derive root static asset paths for document downloads
+  const backendStaticRoot = API_BASE.replace('/api/v1', '')
+
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div>
-        <h2 className="text-2xl font-extrabold font-outfit text-gray-100 flex items-center space-x-2">
-          <span>NIS2 Article 21 Compliance Gap Matrix</span>
-        </h2>
-        <p className="text-xs text-gray-400 mt-1">
-          Perform digital maturity alignment audits against Swedish NCSC-SE requirements. Adjust sliders and enter auditor annotations to update database scores.
-        </p>
+      <div className="flex justify-between items-center bg-gray-900 bg-opacity-40 border border-gray-800 rounded-2xl p-6 backdrop-blur-md">
+        <div>
+          <h2 className="text-2xl font-extrabold font-outfit text-gray-100 flex items-center space-x-2">
+            <span>NIS2 Article 21 Compliance Gap Matrix</span>
+          </h2>
+          <p className="text-xs text-gray-400 mt-1">
+            Perform digital maturity alignment audits against Swedish NCSC-SE requirements. Adjust sliders and enter auditor annotations to update database scores.
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -168,7 +200,7 @@ export default function GapMatrix({ gaps, API_BASE, fetchAllData }) {
               {/* Textarea Comments Form */}
               <div className="space-y-3.5">
                 <div className="space-y-1">
-                  <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Auditor Comments</label>
+                  <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider font-outfit">Auditor Findings</label>
                   <textarea 
                     rows="2" 
                     value={comments} 
@@ -179,7 +211,7 @@ export default function GapMatrix({ gaps, API_BASE, fetchAllData }) {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Priority Remediation Steps</label>
+                  <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider font-outfit">Priority Remediation Steps</label>
                   <textarea 
                     rows="2" 
                     value={steps} 
@@ -188,24 +220,64 @@ export default function GapMatrix({ gaps, API_BASE, fetchAllData }) {
                     placeholder="Describe step-by-step remediation instructions..."
                   />
                 </div>
+
+                {/* Evidence Attachment Section */}
+                <div className="space-y-2 border-t border-gray-850 pt-3">
+                  <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider font-outfit block">Policy Evidence File</label>
+                  
+                  {gap.evidence_file_path ? (
+                    <div className="flex items-center justify-between bg-gray-950 p-2.5 border border-gray-855 rounded-xl text-xs">
+                      <div className="flex items-center space-x-2 text-gray-300">
+                        <FileText className="w-4 h-4 text-cyber-primary" />
+                        <span className="font-mono text-[10px] truncate max-w-[180px]">
+                          {gap.evidence_file_path.split('/').pop()}
+                        </span>
+                      </div>
+                      <a
+                        href={`${backendStaticRoot}/${gap.evidence_file_path}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-cyber-primary hover:text-white flex items-center space-x-1 font-semibold text-[10px] transition-all"
+                      >
+                        <span>View file</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] text-gray-500 italic block">No policy evidence attached yet.</span>
+                  )}
+
+                  {/* Document Uploader Field */}
+                  <div className="flex items-center justify-center w-full">
+                    <label className="w-full flex items-center justify-center space-x-2 bg-gray-900 hover:bg-gray-850 border border-dashed border-gray-800 hover:border-gray-700 text-gray-400 hover:text-white rounded-xl py-2 cursor-pointer transition-all">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-semibold">Upload Evidence Document</span>
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => handleFileUpload(gap.article_id, e.target.files[0])}
+                      />
+                    </label>
+                  </div>
+                </div>
               </div>
 
               {/* Commit Notes Trigger */}
               <button 
                 onClick={() => saveGap(gap.article_id, gap)}
-                disabled={saving === 'saving'}
+                disabled={saving === 'saving' || saving === 'saving_file'}
                 className={`w-full py-2.5 rounded-xl text-xs font-semibold tracking-wider transition-all duration-300 shadow-md flex items-center justify-center space-x-2 ${
-                  saving === 'saved' ? 'bg-cyber-emerald text-white' :
+                  saving === 'saved' || saving === 'saved_file' ? 'bg-cyber-emerald text-white' :
                   saving === 'error' ? 'bg-cyber-rose text-white' :
                   'bg-gray-800 hover:bg-cyber-primary text-gray-200 hover:text-white border border-gray-700 hover:border-transparent'
                 }`}
               >
-                {saving === 'saving' ? (
+                {saving === 'saving' || saving === 'saving_file' ? (
                   <>
                     <span className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent"></span>
-                    <span>Saving score changes...</span>
+                    <span>Processing modifications...</span>
                   </>
-                ) : saving === 'saved' ? (
+                ) : (saving === 'saved' || saving === 'saved_file') ? (
                   <>
                     <Check className="w-4 h-4" />
                     <span>Audit Notes Successfully Saved!</span>

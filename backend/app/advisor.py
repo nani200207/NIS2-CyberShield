@@ -1,7 +1,9 @@
 import os
+import requests
+import json
 from sqlalchemy.orm import Session
 import google.generativeai as genai
-from backend.app.models import SystemSettings, GapAnalysis, Asset
+from backend.app.models import SystemSettings, GapAnalysis, Asset, Organization
 
 # Local Swedish & English NIS2 Directive knowledge snippet base for RAG fallback
 LOCAL_NIS2_DIRECTIVE_KNOWLEDGE = {
@@ -28,7 +30,7 @@ LOCAL_NIS2_DIRECTIVE_KNOWLEDGE = {
     "supplychain": {
         "title": "Article 21.2d - Supply Chain Security & Third-Party Risks",
         "content": "Entities must evaluate the security practices of all direct suppliers. In Sweden, this includes validating supplier certifications (ISO 27001), reviewing vulnerability disclosures of vendor-provided software, and enforcing strict service level agreements (SLAs) regarding security breach notifications. Open source packages and dependencies must be cataloged in a Software Bill of Materials (SBOM).",
-        "keywords": ["supply chain", "vendor", "supplier", "third party", "sla", "sla", "dependency", "sbom", "audit"]
+        "keywords": ["supply chain", "vendor", "supplier", "third party", "sla", "dependency", "sbom", "audit"]
     },
     "risk": {
         "title": "Article 21.2a - Risk Analysis & Information Security Policies",
@@ -42,16 +44,15 @@ LOCAL_NIS2_DIRECTIVE_KNOWLEDGE = {
     }
 }
 
-def generate_local_response(query: str, db: Session) -> dict:
+def generate_local_response(query: str, db: Session, organization_id: int = 1) -> dict:
     """
-    Simulates AI RAG query using local Swedish NIS2 guidelines, context-aware 
-    information about the company's current database state, and custom replies.
+    Simulates AI RAG query using local Swedish NIS2 guidelines.
     """
     query_lower = query.lower()
     
     # 1. Gather context from discovered assets and gap analysis
-    assets = db.query(Asset).all()
-    gaps = db.query(GapAnalysis).all()
+    assets = db.query(Asset).filter(Asset.organization_id == organization_id).all()
+    gaps = db.query(GapAnalysis).filter(GapAnalysis.organization_id == organization_id).all()
     
     in_scope_assets = [a for a in assets if a.in_scope]
     non_compliant_gaps = [g for g in gaps if g.status == "Non-Compliant"]
@@ -91,7 +92,7 @@ def generate_local_response(query: str, db: Session) -> dict:
             reply += f"Our scanner identified a critical gap: **{mfa_gap.comments}**\n\n"
             reply += "##### Action Plan:\n"
             reply += "1. **Mandate MFA:** Enforce MFA on all corporate interfaces. We recommend FIDO2 / WebAuthn standard security keys or Authenticator Apps. Avoid SMS-based 2FA.\n"
-            reply += "2. **Secure Admin Gates:** Discovered admin interfaces (e.g. your exposed dashboard Kibana on `185.190.140.22`) must be locked down behind an Identity-Aware Proxy (IAP) or local VPN immediately.\n"
+            reply += "2. **Secure Admin Gates:** Discovered admin interfaces must be locked down behind an Identity-Aware Proxy (IAP) or local VPN immediately.\n"
             reply += "3. **Swedish Regulator Compliance:** NCSC-SE recommends establishing an out-of-band communication app (like Signal or a dedicated encrypted wire server) for emergency communications."
         else:
             reply += "Identity and access management checks pass standard checks, but continuous audits should be performed weekly on Active Directory."
@@ -102,8 +103,7 @@ def generate_local_response(query: str, db: Session) -> dict:
         if crypto_gap and crypto_gap.status != "Compliant":
             reply += f"Our scanner identified a critical gap: **{crypto_gap.comments}**\n\n"
             reply += "##### Action Plan:\n"
-            reply += "1. **Disable Insecure Services:** Enforce TLS 1.3 on all client-facing web servers. For Nginx configuration:\n"
-            reply += "   ```nginx\n   ssl_protocols TLSv1.2 TLSv1.3;\n   ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256;\n   ssl_prefer_server_ciphers on;\n   ```\n"
+            reply += "1. **Disable Insecure Services:** Enforce TLS 1.3 on all client-facing web servers.\n"
             reply += "2. **Database Protection:** Ensure standard tables in local PostgreSQL utilize transparent data encryption (TDE) or have application-level field encryption active."
         else:
             reply += "Encryption policies are compliant. Keep auditing cipher suites during quarterly scans."
@@ -115,7 +115,7 @@ def generate_local_response(query: str, db: Session) -> dict:
             reply += f"Our scanner identified a critical gap: **{inc_gap.comments}**\n\n"
             reply += "##### Action Plan:\n"
             reply += "1. **Establish MSB Escalation:** Prepare a template document containing incident scope, type, and impact. Register on cert.se for incident reporting.\n"
-            reply += "2. **Centralize Logs:** Deploy a local ELK Stack or Graylog instances. Ensure syslog files on `10.100.4.45` and `10.100.4.10` forward records securely via TLS to the centralized SIEM.\n"
+            reply += "2. **Centralize Logs:** Deploy a local ELK Stack or Graylog instances.\n"
             reply += "3. **Swedish Timeframes:** Train SOC operators on the strict Swedish MSB 24-hour early warning window."
         else:
             reply += "Incident response flows are partially mapped. Review testing drills."
@@ -130,73 +130,140 @@ def generate_local_response(query: str, db: Session) -> dict:
         else:
             reply += "Congratulations! No severe non-compliance gaps found. Continue regular scheduling scans to maintain this status."
             
-    reply += "\n\n*Note: To leverage advanced natural language reasoning, configure your Google Gemini API key in the Platform Settings dashboard.*"
+    reply += "\n\n*Note: Configure your API keys (Gemini, OpenAI, or Claude) in the settings panel to activate advanced multi-LLM reasoning.*"
     
     return {"response": reply, "sources": sources}
 
-def query_gemini_advisor(query: str, api_key: str, db: Session) -> dict:
+def query_gemini_advisor(query: str, api_key: str, system_prompt: str) -> dict:
     """
-    Connects to live Google Gemini API using generativeai library,
-    loading local audit findings in the prompt context to make it fully custom.
+    Connects to live Google Gemini API using generativeai library.
     """
-    # 1. Fetch live audit context
-    assets = db.query(Asset).all()
-    gaps = db.query(GapAnalysis).all()
+    try:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        full_prompt = f"{system_prompt}\n\nUSER QUERY: {query}"
+        response = model.generate_content(full_prompt)
+        return {
+            "response": response.text,
+            "sources": ["Google Gemini 1.5 Flash Model", "Live Network Context", "Official MSB Directives"]
+        }
+    except Exception as e:
+        print(f"Gemini API execution error: {str(e)}")
+        raise e
+
+def query_openai_advisor(query: str, api_key: str, system_prompt: str) -> dict:
+    """
+    Connects to OpenAI API using raw REST request.
+    """
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": "gpt-4-turbo",
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": f"USER QUERY: {query}"}
+        ],
+        "temperature": 0.7
+    }
+    res = requests.post("https://api.openai.com/v1/chat/completions", json=payload, headers=headers, timeout=10)
+    if res.status_code == 200:
+        content = res.json()["choices"][0]["message"]["content"]
+        return {
+            "response": content,
+            "sources": ["OpenAI GPT-4 Turbo Model", "Live Network Context", "Official MSB Directives"]
+        }
+    else:
+        raise Exception(f"OpenAI API error: {res.status_code} - {res.text}")
+
+def query_claude_advisor(query: str, api_key: str, system_prompt: str) -> dict:
+    """
+    Connects to Anthropic Claude API using raw REST request.
+    """
+    headers = {
+        "x-api-key": api_key,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json"
+    }
+    payload = {
+        "model": "claude-3-5-sonnet-20240620",
+        "system": system_prompt,
+        "messages": [
+            {"role": "user", "content": query}
+        ],
+        "max_tokens": 1500
+    }
+    res = requests.post("https://api.anthropic.com/v1/messages", json=payload, headers=headers, timeout=10)
+    if res.status_code == 200:
+        content = res.json()["content"][0]["text"]
+        return {
+            "response": content,
+            "sources": ["Anthropic Claude 3.5 Sonnet Model", "Live Network Context", "Official MSB Directives"]
+        }
+    else:
+        raise Exception(f"Claude API error: {res.status_code} - {res.text}")
+
+def get_ai_remediation_advice(query: str, db: Session, organization_id: int = 1) -> dict:
+    """
+    Main entrypoint: Fetches settings, scopes context to Org SaaS, and invokes active LLM.
+    """
+    # 1. Fetch live audit context for this organization
+    assets = db.query(Asset).filter(Asset.organization_id == organization_id).all()
+    gaps = db.query(GapAnalysis).filter(GapAnalysis.organization_id == organization_id).all()
+    
+    org = db.query(Organization).filter(Organization.id == organization_id).first()
+    org_name = org.name if org else "Demo Corporation"
     
     assets_summary = []
     for a in assets:
-        assets_summary.append(f"IP: {a.ip}, Host: {a.hostname}, Scope: {a.scope_sector}, Scope critical: {a.in_scope}, Ports: {a.ports}")
+        ports_info = a.ports if a.ports else "None"
+        risk_info = f"Risk: {a.dynamic_risk_score}"
+        assets_summary.append(f"IP: {a.ip}, Host: {a.hostname or 'Unknown'}, Scope sector: {a.scope_sector or 'None'}, Ports: {ports_info}, {risk_info}")
         
     gaps_summary = []
     for g in gaps:
-        gaps_summary.append(f"Article: {g.article_id}, Control: {g.control_name}, Status: {g.status}, Score: {g.score}%, Auditor Comments: {g.comments}")
+        gaps_summary.append(f"Article: {g.article_id}, Control: {g.control_name}, Status: {g.status}, Score: {g.score}%, Auditor Comments: {g.comments or 'None'}")
         
-    # 2. Construct expert context-aware system prompt
+    # 2. Construct context-aware system prompt
     system_prompt = f"""You are a senior cybersecurity auditor specializing in European NIS2 Compliance (Directive (EU) 2022/2555) and the Swedish regulatory framework (NCSC-SE / MSB regulations, MSBFS).
 Your job is to advise the company on how to remediate their compliance gaps. Explain complex cybersecurity and legal concepts in clear, actionable, plain language.
 
-Here is the current audited status of the organization's network:
+Here is the current audited status of the organization '{org_name}':
 ---
 DISCOVERED ASSETS:
-{chr(10).join(assets_summary)}
+{os.linesep.join(assets_summary) if assets_summary else "No assets discovered yet."}
 
 NIS2 GAP ANALYSIS (ARTICLE 21):
-{chr(10).join(gaps_summary)}
+{os.linesep.join(gaps_summary) if gaps_summary else "No gap analysis results populated yet."}
 ---
 
 Answer the user's query professionally. If relevant, include actionable steps, prioritized order, Swedish regulatory requirements (MSB timelines like 24h early warning, cert.se, etc.), and configuration or code snippets where helpful. Use markdown structure.
 """
 
-    try:
-        genai.configure(api_key=api_key)
-        # We can use gemini-1.5-flash as default, or general models
-        model = genai.GenerativeModel("gemini-1.5-flash")
+    # 3. Retrieve LLM settings
+    settings = db.query(SystemSettings).filter(SystemSettings.organization_id == organization_id).first()
+    if not settings:
+        settings = db.query(SystemSettings).filter(SystemSettings.id == 1).first()
         
-        # Merge prompt
-        full_prompt = f"{system_prompt}\n\nUSER QUERY: {query}"
-        
-        response = model.generate_content(full_prompt)
-        
-        return {
-            "response": response.text,
-            "sources": ["Google Gemini 1.5 Flash Model", "Live Discovered Network Context", "Official Swedish MSB Directives"]
-        }
-    except Exception as e:
-        print(f"Gemini API execution error: {str(e)}. Falling back to local responder.")
-        return generate_local_response(f"{query} (Gemini API failed: {str(e)})", db)
-
-def get_ai_remediation_advice(query: str, db: Session) -> dict:
-    """
-    Main entrypoint: Decides whether to use live Gemini model or local RAG.
-    """
-    settings = db.query(SystemSettings).first()
-    gemini_key = settings.gemini_key if settings else ""
+    provider = settings.llm_provider if settings else "Google Gemini"
     
-    # Also support loading from system environment
-    if not gemini_key:
-        gemini_key = os.getenv("GEMINI_API_KEY", "")
+    # 4. Route to active LLM provider with safe local fallback
+    try:
+        if provider == "Google Gemini" and settings and (settings.gemini_key or os.getenv("GEMINI_API_KEY")):
+            api_key = settings.gemini_key if settings.gemini_key else os.getenv("GEMINI_API_KEY")
+            return query_gemini_advisor(query, api_key, system_prompt)
+            
+        elif provider == "OpenAI GPT-4" and settings and (settings.openai_key or os.getenv("OPENAI_API_KEY")):
+            api_key = settings.openai_key if settings.openai_key else os.getenv("OPENAI_API_KEY")
+            return query_openai_advisor(query, api_key, system_prompt)
+            
+        elif provider == "Anthropic Claude" and settings and (settings.claude_key or os.getenv("CLAUDE_API_KEY")):
+            api_key = settings.claude_key if settings.claude_key else os.getenv("CLAUDE_API_KEY")
+            return query_claude_advisor(query, api_key, system_prompt)
+            
+    except Exception as e:
+        print(f"[Advisor] Error with model {provider}: {str(e)}. Falling back to local responder.")
         
-    if gemini_key:
-        return query_gemini_advisor(query, gemini_key, db)
-    else:
-        return generate_local_response(query, db)
+    # Fallback to local expert response
+    return generate_local_response(query, db, organization_id=organization_id)
